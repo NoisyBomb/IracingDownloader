@@ -1,4 +1,26 @@
-#ifndef CAR_H
-#define CAR_H
+#pragma once
 
-#endif // CAR_H
+#include <QString>
+
+
+struct Car
+{
+    QString id;
+    QString displayName;
+    QString folderName;
+
+    // Convenience constructor
+    Car() = default;
+    Car(const QString& id,
+        const QString& displayName,
+        const QString& folderName)
+        : id(id)
+        , displayName(displayName)
+        , folderName(folderName)
+    {}
+
+    bool isValid() const { return !folderName.isEmpty(); }
+
+    bool operator==(const Car& other) const { return id == other.id; }
+    bool operator!=(const Car& other) const { return !(*this == other); }
+};
