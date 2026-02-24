@@ -19,6 +19,7 @@ struct Setup
     QString  author;
     QString  provider;
     QString  series;
+    int      week = 0;
 
     Car      car;
     Track    track;

@@ -14,6 +14,7 @@
 
 #include "setup.h"
 #include "setupmanager.h"
+#include "iracingweek.h"
 
 // ══════════════════════════════════════════════════════════════════════════════
 // DatapackCard
@@ -56,6 +57,7 @@ private:
 // ══════════════════════════════════════════════════════════════════════════════
 
 class QScrollArea;
+class QComboBox;
 
 class MainWindow : public QMainWindow
 {
@@ -83,6 +85,7 @@ private:
     void setupStyleSheet();
     void populateTabs(const QList<Setup> &setups);
     void clearTabs();
+    void applyWeekFilter(int week);
     QScrollArea  *getOrCreateTab(const QString &series);
     DatapackCard *findCard(const QString &datapackId);
 
@@ -93,6 +96,9 @@ private:
     QPushButton *m_refreshBtn  = nullptr;
 
     QTabWidget  *m_tabs = nullptr;
+
+    QComboBox   *m_weekCombo   = nullptr;
+    int          m_currentWeek = 1;
 
     QMap<QString, QScrollArea *>  m_seriesTabs;
     QMap<QString, DatapackCard *> m_cards;

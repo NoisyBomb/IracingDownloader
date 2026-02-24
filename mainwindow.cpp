@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 
 #include <QApplication>
+#include <QComboBox>
 #include <QScrollArea>
 #include <QGridLayout>
 #include <QMessageBox>
@@ -221,9 +222,17 @@ void MainWindow::setupUi()
     m_refreshBtn->setFixedWidth(100);
     m_refreshBtn->setEnabled(false);
 
+    m_weekCombo = new QComboBox(m_topBar);
+    m_weekCombo->setObjectName("WeekCombo");
+    m_weekCombo->setFixedWidth(110);
+    m_weekCombo->setEnabled(false);
+    for (int w = 1; w <= 12; ++w)
+        m_weekCombo->addItem(QString("Week %1").arg(w), w);
+
     topLayout->addWidget(m_logoLabel);
     topLayout->addStretch();
     topLayout->addWidget(m_statusLabel);
+    topLayout->addWidget(m_weekCombo);
     topLayout->addWidget(m_refreshBtn);
     topLayout->addWidget(m_loginBtn);
 
@@ -261,12 +270,23 @@ void MainWindow::onLoginSucceeded()
     m_refreshBtn->setEnabled(true);
     m_statusLabel->setText("Logged in");
 
+    // Выставляем текущую неделю
+    const IracingWeek cur = IracingWeek::current();
+    m_currentWeek = cur.week;
+    m_weekCombo->setCurrentIndex(cur.week - 1);
+    m_weekCombo->setEnabled(true);
+    connect(m_weekCombo, &QComboBox::currentIndexChanged, this, [this](int idx) {
+        m_currentWeek = idx + 1;
+        applyWeekFilter(m_currentWeek);
+    });
+
     disconnect(m_loginBtn, &QPushButton::clicked, this, &MainWindow::onLoginClicked);
     connect(m_loginBtn, &QPushButton::clicked, this, [this]() {
         m_manager->logout();
         m_loginBtn->setText("Login");
         m_refreshBtn->setEnabled(false);
         m_statusLabel->setText("Not logged in");
+        m_weekCombo->setEnabled(false);
         disconnect(m_loginBtn, nullptr, this, nullptr);
         connect(m_loginBtn, &QPushButton::clicked, this, &MainWindow::onLoginClicked);
         clearTabs();
@@ -296,6 +316,7 @@ void MainWindow::onSetupListUpdated(const QList<Setup> &setups)
     m_refreshBtn->setEnabled(true);
     m_statusLabel->setText(QString("%1 datapacks").arg(setups.size()));
     populateTabs(setups);
+    applyWeekFilter(m_currentWeek);
 }
 
 void MainWindow::onDatapackDetailsLoaded(const QString &datapackId, const QList<Setup> &setups)
@@ -386,6 +407,7 @@ void MainWindow::populateTabs(const QList<Setup> &setups)
             connect(card, &DatapackCard::downloadRequested,
                     this, &MainWindow::downloadAndInstall);
 
+            card->setProperty("week", summary.week);
             grid->addWidget(card, row, col);
             m_cards[summary.datapackId] = card;
 
@@ -397,6 +419,17 @@ void MainWindow::populateTabs(const QList<Setup> &setups)
 DatapackCard *MainWindow::findCard(const QString &datapackId)
 {
     return m_cards.value(datapackId, nullptr);
+}
+
+
+void MainWindow::applyWeekFilter(int week)
+{
+    for (auto it = m_cards.begin(); it != m_cards.end(); ++it) {
+        DatapackCard *card = it.value();
+        // DatapackCard хранит week в dynamic property, выставленном при создании
+        const int cardWeek = card->property("week").toInt();
+        card->setVisible(cardWeek == 0 || cardWeek == week);
+    }
 }
 
 // ── Style Sheet ────────────────────────────────────────────────────────────
@@ -443,6 +476,22 @@ QPushButton:pressed { background-color: #151e30; }
 QPushButton:disabled { color: #3a4458; border-color: #1a2030; }
 #LoginBtn { background-color: #1a3060; color: #6090e0; border-color: #2a4080; }
 #LoginBtn:hover { background-color: #1e3870; color: #80b0ff; }
+#WeekCombo {
+    background-color: #1a2030;
+    color: #c8a84b;
+    border: 1px solid #2a3a20;
+    border-radius: 5px;
+    padding: 4px 10px;
+    font-weight: 600;
+    font-size: 12px;
+}
+#WeekCombo:disabled { color: #3a4458; border-color: #1a2030; }
+#WeekCombo QAbstractItemView {
+    background-color: #131820;
+    color: #c8d4e8;
+    border: 1px solid #2a3448;
+    selection-background-color: #1e2a40;
+}
 QTabWidget::pane { border: none; background-color: #0f1117; }
 QTabBar { background-color: #080b10; }
 QTabBar::tab {
