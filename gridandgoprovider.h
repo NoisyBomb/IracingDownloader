@@ -6,6 +6,7 @@
 #include <QString>
 #include <QList>
 #include <QNetworkRequest>
+#include <utility>
 
 class QNetworkAccessManager;
 class QNetworkReply;
@@ -17,7 +18,6 @@ class GridAndGoProvider : public QObject
 public:
     explicit GridAndGoProvider(QObject* parent = nullptr);
 
-    // Установить токен после логина
     void setAccessToken(const QString& token);
 
     // Шаг 1: загрузить список датапаков (без токена)
@@ -30,8 +30,8 @@ signals:
     // Список датапаков загружен (базовая инфа, без setupLinks)
     void datapackListReady(const QList<Setup>& setups);
 
-    // Детали одного датапака готовы (с setupLinks — несколько Setup на один датапак)
-    void datapackDetailsReady(const QList<Setup>& setups);
+    // Детали готовы: datapackId + список Setup (по одному на каждый .sto файл)
+    void datapackDetailsReady(const QString& datapackId, const QList<Setup>& setups);
 
     void fetchFailed(const QString& reason);
 
@@ -43,7 +43,7 @@ private:
     QNetworkRequest makeRequest(const QUrl& url, bool withAuth = false) const;
 
     QList<Setup> parseDatapackList(const QByteArray& json) const;
-    QList<Setup> parseDatapackDetails(const QByteArray& json) const;
+    std::pair<QString, QList<Setup>> parseDatapackDetails(const QByteArray& json) const;
 
     QNetworkAccessManager* m_nam   = nullptr;
     QString                m_token;

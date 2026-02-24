@@ -1,4 +1,5 @@
 #include "gridandgoprovider.h"
+#include "carregistry.h"
 
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
@@ -8,7 +9,6 @@
 #include <QJsonObject>
 #include <QUrl>
 #include <QUrlQuery>
-#include <QDateTime>
 #include <QDebug>
 
 
@@ -21,6 +21,8 @@ void GridAndGoProvider::setAccessToken(const QString& token)
 {
     m_token = token;
 }
+
+// ── Шаг 1: список датапаков ───────────────────────────────────────────────────
 
 void GridAndGoProvider::fetchDatapackList(int year, int season)
 {
@@ -57,34 +59,40 @@ void GridAndGoProvider::onListReplyFinished(QNetworkReply* reply)
 
 QList<Setup> GridAndGoProvider::parseDatapackList(const QByteArray& json) const
 {
-    const QJsonArray arr = QJsonDocument::fromJson(json).array();
+    // API returns { "items": [...] }
+    const QJsonDocument doc = QJsonDocument::fromJson(json);
+    const QJsonArray arr = doc.object().value("items").toArray();
+
     QList<Setup> result;
     result.reserve(arr.size());
 
     for (const QJsonValue& val : arr) {
         const QJsonObject obj = val.toObject();
 
-        const QString id      = obj["id"].toString();
-        const QString carId   = obj["carId"].toString();
-        const QString carName = obj["carName"].toString();
+        const QString id        = obj["id"].toString();
+        const QString carId     = obj["carId"].toString();
+        const QString carName   = obj["carName"].toString();
         const QString trackName = obj["trackName"].toString();
-        const QString author  = obj["author"].toString();
-        const QString series  = obj["series"].toString();
+        const QString author    = obj["author"].toString();
+        const QString series    = obj["series"].toString();
 
-        if (id.isEmpty() || carId.isEmpty() || trackName.isEmpty()) {
+        if (id.isEmpty() || carId.isEmpty() || trackName.isEmpty())
             continue;
-        }
 
-        const Car   car(carId, carName, /*folderName=*/"");
+        const QString folderName = CarRegistry::instance().folderName(carId, carName);
+        const Car   car(carId, carName, folderName);
         const Track track(/*id=*/"", trackName);
 
         Setup s;
         s.id          = id;
-        s.displayName = series + " – " + trackName;
+        s.datapackId  = id;   // на уровне списка id == datapackId
+        s.displayName = carName + " @ " + trackName;
         s.author      = author;
         s.provider    = "GnG";
+        s.series      = series;
         s.car         = car;
         s.track       = track;
+        // downloadUrl и fileName появятся после fetchDatapackDetails()
 
         result.append(s);
     }
@@ -92,6 +100,7 @@ QList<Setup> GridAndGoProvider::parseDatapackList(const QByteArray& json) const
     return result;
 }
 
+// ── Шаг 2: детали датапака → setupLinks ───────────────────────────────────────
 
 void GridAndGoProvider::fetchDatapackDetails(const QString& datapackId)
 {
@@ -120,16 +129,15 @@ void GridAndGoProvider::onDetailsReplyFinished(QNetworkReply* reply)
     }
 
     const QByteArray data = reply->readAll();
-    const QList<Setup> setups = parseDatapackDetails(data);
+    const auto [datapackId, setups] = parseDatapackDetails(data);
 
     qInfo() << "[GnGProvider] Файлов сетапов в датапаке:" << setups.size();
-    emit datapackDetailsReady(setups);
+    emit datapackDetailsReady(datapackId, setups);
 }
 
-QList<Setup> GridAndGoProvider::parseDatapackDetails(const QByteArray& json) const
+std::pair<QString, QList<Setup>> GridAndGoProvider::parseDatapackDetails(const QByteArray& json) const
 {
     const QJsonObject obj = QJsonDocument::fromJson(json).object();
-    QList<Setup> result;
 
     const QString datapackId = obj["id"].toString();
     const QString carId      = obj["carId"].toString();
@@ -139,9 +147,11 @@ QList<Setup> GridAndGoProvider::parseDatapackDetails(const QByteArray& json) con
     const QString author     = obj["author"].toString();
     const QString series     = obj["series"].toString();
 
-    const Car   car(carId, carName, /*folderName=*/"");
+    const QString folderName = CarRegistry::instance().folderName(carId, carName);
+    const Car   car(carId, carName, folderName);
     const Track track(trackId, trackName);
 
+    QList<Setup> result;
 
     const QJsonArray setupLinks = obj["setupLinks"].toArray();
     for (const QJsonValue& val : setupLinks) {
@@ -149,15 +159,16 @@ QList<Setup> GridAndGoProvider::parseDatapackDetails(const QByteArray& json) con
         const QString name = link["name"].toString();
         const QString url  = link["url"].toString();
 
-        if (name.isEmpty() || url.isEmpty()) {
+        if (name.isEmpty() || url.isEmpty())
             continue;
-        }
 
         Setup s;
         s.id          = datapackId + "_" + name;
+        s.datapackId  = datapackId;
         s.displayName = name;
         s.author      = author;
         s.provider    = "GnG";
+        s.series      = series;
         s.car         = car;
         s.track       = track;
         s.downloadUrl = QUrl(url);
@@ -166,8 +177,10 @@ QList<Setup> GridAndGoProvider::parseDatapackDetails(const QByteArray& json) con
         result.append(s);
     }
 
-    return result;
+    return { datapackId, result };
 }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 QNetworkRequest GridAndGoProvider::makeRequest(const QUrl& url, bool withAuth) const
 {

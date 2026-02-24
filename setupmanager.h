@@ -26,20 +26,16 @@ public:
 
     // ── Данные ────────────────────────────────────────
     void refreshDatapackList(int year = 2026, int season = 1);
-
     const QList<Setup>& setups() const { return m_setups; }
 
-    // ── Действия с сетапом ────────────────────────────
-    // Скачать детали датапака (setupLinks) и закэшировать
+    // Загрузить детали датапака (setupLinks)
     void loadDatapackDetails(const QString& datapackId);
 
     // Скачать и установить конкретный сетап
     void downloadAndInstall(const Setup& setup);
 
-    // Удалить сетап из iRacing
+    // Удалить / проверить
     bool uninstall(const Setup& setup);
-
-    // Проверить установлен ли сетап
     bool isInstalled(const Setup& setup) const;
 
 signals:
@@ -50,7 +46,9 @@ signals:
 
     // Список
     void setupListUpdated(const QList<Setup>& setups);
-    void datapackDetailsLoaded(const QList<Setup>& setups);
+
+    // Детали датапака (datapackId нужен MainWindow чтобы найти нужную карточку)
+    void datapackDetailsLoaded(const QString& datapackId, const QList<Setup>& setups);
 
     // Загрузка и установка
     void downloadProgress(const Setup& setup, qint64 received, qint64 total);
@@ -65,18 +63,18 @@ private slots:
     void onLoginFailed(const QString& reason);
 
     void onDatapackListReady(const QList<Setup>& setups);
-    void onDatapackDetailsReady(const QList<Setup>& setups);
+    void onDatapackDetailsReady(const QString& datapackId, const QList<Setup>& setups);
 
     void onDownloadFinished(const Setup& setup, const QString& tempFilePath);
     void onDownloadFailed(const Setup& setup, const QString& reason);
     void onDownloadProgress(const Setup& setup, qint64 received, qint64 total);
 
 private:
-    AuthManager*          m_auth      = nullptr;
-    GridAndGoProvider*    m_provider  = nullptr;
-    SetupDownloader*      m_downloader= nullptr;
-    SetupInstaller*       m_installer = nullptr;
-    IracingPathResolver*  m_resolver  = nullptr;
+    IracingPathResolver*  m_resolver   = nullptr;
+    AuthManager*          m_auth       = nullptr;
+    GridAndGoProvider*    m_provider   = nullptr;
+    SetupDownloader*      m_downloader = nullptr;
+    SetupInstaller*       m_installer  = nullptr;
 
-    QList<Setup> m_setups; // закэшированный список
+    QList<Setup> m_setups;
 };

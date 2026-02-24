@@ -99,10 +99,10 @@ void SetupManager::loadDatapackDetails(const QString& datapackId)
     m_provider->fetchDatapackDetails(datapackId);
 }
 
-void SetupManager::onDatapackDetailsReady(const QList<Setup>& setups)
+void SetupManager::onDatapackDetailsReady(const QString& datapackId, const QList<Setup>& setups)
 {
     qInfo() << "[SetupManager] Детали датапака загружены, файлов:" << setups.size();
-    emit datapackDetailsLoaded(setups);
+    emit datapackDetailsLoaded(datapackId, setups);
 }
 
 // ── Скачивание и установка ────────────────────────────────────────────────────

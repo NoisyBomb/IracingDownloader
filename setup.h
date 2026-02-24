@@ -9,10 +9,16 @@
 
 struct Setup
 {
+    // Unique id of this individual .sto file
     QString  id;
+
+    // Id of the parent datapack (one datapack may have multiple .sto files)
+    QString  datapackId;
+
     QString  displayName;
     QString  author;
     QString  provider;
+    QString  series;
 
     Car      car;
     Track    track;
@@ -29,12 +35,16 @@ struct Setup
           const Track&   track,
           const QUrl&    downloadUrl,
           const QString& fileName,
-          const QString& provider = {},
-          const QString& author   = {})
+          const QString& provider   = {},
+          const QString& author     = {},
+          const QString& series     = {},
+          const QString& datapackId = {})
         : id(id)
+        , datapackId(datapackId)
         , displayName(displayName)
         , author(author)
         , provider(provider)
+        , series(series)
         , car(car)
         , track(track)
         , downloadUrl(downloadUrl)
@@ -43,9 +53,8 @@ struct Setup
 
     QString subFolderName() const
     {
-        if (provider.isEmpty()) {
+        if (provider.isEmpty())
             return track.displayName;
-        }
         return provider + "_" + track.displayName;
     }
 
