@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "trackregistry.h"
 
 #include <QApplication>
 #include <algorithm>
@@ -8,6 +9,7 @@
 #include <QMessageBox>
 #include <QPixmap>
 #include <QDir>
+#include <QSet>
 #include <QDebug>
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -22,11 +24,12 @@ static QPixmap loadPic(const QString &subfolder, const QString &name)
         const QString path = QString("pic/%1/%2.%3").arg(subfolder, name, ext);
         if (QFile::exists(path))
             return QPixmap(path);
+        qDebug() << "[loadPic] cwd:" << QDir::currentPath() << "path:" << path;
     }
     return QPixmap();
 }
 
-static QString sanitizeFilename(const QString &s)
+static QString sanitizeCarName(const QString &s)
 {
     QString r = s.toLower();
     r.replace(' ', '_');
@@ -73,6 +76,8 @@ void DatapackRow::buildUi(const Setup &summary)
 
     m_seriesLabel = new QLabel(summary.series.toUpper(), leftPanel);
     m_seriesLabel->setObjectName("RowSeriesBadge");
+    m_seriesLabel->setMaximumWidth(160);
+    m_seriesLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
 
     m_carLabel = new QLabel(summary.car.displayName, leftPanel);
     m_carLabel->setObjectName("RowCarName");
@@ -129,7 +134,8 @@ void DatapackRow::buildUi(const Setup &summary)
     m_trackImg->setAlignment(Qt::AlignCenter);
     m_trackImg->setScaledContents(false);
 
-    const QPixmap trackPix = loadPic("track", sanitizeFilename(summary.track.displayName));
+    const QString trackFile = TrackRegistry::instance().imageFile(summary.track.displayName);
+    const QPixmap trackPix = loadPic("track", trackFile);
     if (!trackPix.isNull())
         m_trackImg->setPixmap(trackPix.scaled(380, 210, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
@@ -140,7 +146,7 @@ void DatapackRow::buildUi(const Setup &summary)
     m_carImg->setAlignment(Qt::AlignCenter);
     m_carImg->setScaledContents(false);
 
-    const QPixmap carPix = loadPic("car", sanitizeFilename(summary.car.displayName));
+    const QPixmap carPix = loadPic("car", sanitizeCarName(summary.car.displayName));
     if (!carPix.isNull())
         m_carImg->setPixmap(carPix.scaled(380, 210, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
@@ -650,7 +656,6 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
     background-color: #1c1500;
     border-radius: 3px;
     padding: 2px 8px;
-    qproperty-maximumWidth: 120;
 }
 #RowCarName  { color: #e6edf3; font-size: 16px; font-weight: 600; }
 #RowTrackName { color: #6080a0; font-size: 13px; }
