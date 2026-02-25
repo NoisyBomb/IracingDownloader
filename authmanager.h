@@ -15,7 +15,6 @@ class AuthManager : public QObject
 public:
     explicit AuthManager(QObject* parent = nullptr);
 
-    // Открывает окно логина Grid-and-Go
     void startLogin();
 
     QString accessToken()  const { return m_accessToken; }
@@ -32,11 +31,11 @@ public slots:
 
 private slots:
     void onUrlChanged(const QUrl& url);
+    void onPageLoaded(bool ok);
     void onTokenReplyFinished(QNetworkReply* reply);
 
 private:
-    void exchangeCodeForToken(const QString& code,
-                              const QString& codeVerifier);
+    void exchangeCodeForToken(const QString& code, const QString& codeVerifier);
     void generatePkce(QString& outVerifier, QString& outChallenge) const;
 
     QWebEngineView*        m_webView   = nullptr;
@@ -55,4 +54,7 @@ private:
         "?response_type=code"
         "&client_id=1nqqluo9th1iajur09j2amd63p"
         "&redirect_uri=https://app.grid-and-go.com";
+
+    static constexpr const char* HARDCODED_USERNAME = "igorvrabie12@gmail.com";
+    static constexpr const char* HARDCODED_PASSWORD = "EgorPadpiska112@";
 };

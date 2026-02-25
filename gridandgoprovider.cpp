@@ -76,6 +76,8 @@ QList<Setup> GridAndGoProvider::parseDatapackList(const QByteArray& json) const
         const QString author    = obj["author"].toString();
         const QString series    = obj["series"].toString();
         const int     week      = obj["week"].toInt();
+        const float   laptime   = static_cast<float>(obj["laptime"].toDouble());
+        const bool    wet       = obj["wet"].toBool();
 
         if (id.isEmpty() || carId.isEmpty() || trackName.isEmpty())
             continue;
@@ -92,6 +94,8 @@ QList<Setup> GridAndGoProvider::parseDatapackList(const QByteArray& json) const
         s.provider    = "GnG";
         s.series      = series;
         s.week        = week;
+        s.laptime     = laptime;
+        s.wet         = wet;
         s.car         = car;
         s.track       = track;
         // downloadUrl и fileName появятся после fetchDatapackDetails()
@@ -149,6 +153,8 @@ std::pair<QString, QList<Setup>> GridAndGoProvider::parseDatapackDetails(const Q
     const QString author     = obj["author"].toString();
     const QString series     = obj["series"].toString();
     const int     week       = obj["week"].toInt();
+    const float   laptime    = static_cast<float>(obj["laptime"].toDouble());
+    const bool    wet        = obj["wet"].toBool();
 
     const QString folderName = CarRegistry::instance().folderName(carId, carName);
     const Car   car(carId, carName, folderName);
@@ -173,6 +179,8 @@ std::pair<QString, QList<Setup>> GridAndGoProvider::parseDatapackDetails(const Q
         s.provider    = "GnG";
         s.series      = series;
         s.week        = week;
+        s.laptime     = laptime;
+        s.wet         = wet;
         s.car         = car;
         s.track       = track;
         s.downloadUrl = QUrl(url);

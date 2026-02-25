@@ -19,7 +19,9 @@ struct Setup
     QString  author;
     QString  provider;
     QString  series;
-    int      week = 0;
+    int      week    = 0;
+    float    laptime = 0.0f;  // seconds
+    bool     wet     = false;
 
     Car      car;
     Track    track;

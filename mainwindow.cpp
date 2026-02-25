@@ -1,164 +1,261 @@
 #include "mainwindow.h"
 
 #include <QApplication>
-#include <QComboBox>
+#include <algorithm>
 #include <QScrollArea>
-#include <QGridLayout>
+#include <QVBoxLayout>
+#include <QComboBox>
 #include <QMessageBox>
-#include <QRegularExpression>
+#include <QPixmap>
+#include <QDir>
 #include <QDebug>
 
 // ══════════════════════════════════════════════════════════════════════════════
-// DatapackCard — implementation
+// Helpers
 // ══════════════════════════════════════════════════════════════════════════════
 
-DatapackCard::DatapackCard(const Setup &summary, QWidget *parent)
+static QPixmap loadPic(const QString &subfolder, const QString &name)
+{
+    // Looks for pic/<subfolder>/<name>.{jpg,png,jpeg}
+    const QStringList exts = { "jpg", "png", "jpeg" };
+    for (const QString &ext : exts) {
+        const QString path = QString("pic/%1/%2.%3").arg(subfolder, name, ext);
+        if (QFile::exists(path))
+            return QPixmap(path);
+    }
+    return QPixmap();
+}
+
+static QString sanitizeFilename(const QString &s)
+{
+    QString r = s.toLower();
+    r.replace(' ', '_');
+    static const QRegularExpression re("[^a-z0-9_]");
+    r.remove(re);
+    return r;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DatapackRow
+// ══════════════════════════════════════════════════════════════════════════════
+
+QString DatapackRow::formatLaptime(float seconds)
+{
+    if (seconds <= 0) return QString();
+    const int mins = static_cast<int>(seconds) / 60;
+    const float secs = seconds - mins * 60;
+    return QString("%1:%2").arg(mins).arg(secs, 6, 'f', 3, '0');
+}
+
+DatapackRow::DatapackRow(const Setup &summary, QWidget *parent)
     : QWidget(parent)
     , m_datapackId(summary.id)
 {
-    setObjectName("DatapackCard");
-    buildSummaryUi(summary);
+    setObjectName("DatapackRow");
+    buildUi(summary);
 }
 
-void DatapackCard::buildSummaryUi(const Setup &summary)
+void DatapackRow::buildUi(const Setup &summary)
 {
-    auto *root = new QVBoxLayout(this);
-    root->setSpacing(6);
-    root->setContentsMargins(14, 14, 14, 14);
+    // ── Outer layout: left info | center track img | right car img ──
+    auto *outer = new QHBoxLayout(this);
+    outer->setContentsMargins(0, 0, 0, 0);
+    outer->setSpacing(0);
 
-    m_seriesLabel = new QLabel(summary.series.toUpper(), this);
-    m_seriesLabel->setObjectName("SeriesBadge");
+    // ── LEFT PANEL ──────────────────────────────────────────────────
+    auto *leftPanel = new QWidget(this);
+    leftPanel->setObjectName("RowLeft");
+    leftPanel->setFixedWidth(340);
 
-    m_carLabel = new QLabel(summary.car.displayName, this);
-    m_carLabel->setObjectName("CardCarName");
+    auto *leftLayout = new QVBoxLayout(leftPanel);
+    leftLayout->setContentsMargins(20, 18, 20, 18);
+    leftLayout->setSpacing(4);
+
+    m_seriesLabel = new QLabel(summary.series.toUpper(), leftPanel);
+    m_seriesLabel->setObjectName("RowSeriesBadge");
+
+    m_carLabel = new QLabel(summary.car.displayName, leftPanel);
+    m_carLabel->setObjectName("RowCarName");
     m_carLabel->setWordWrap(true);
 
-    m_trackLabel = new QLabel(summary.track.fullName(), this);
-    m_trackLabel->setObjectName("CardTrackName");
+    m_trackLabel = new QLabel(summary.track.fullName(), leftPanel);
+    m_trackLabel->setObjectName("RowTrackName");
     m_trackLabel->setWordWrap(true);
 
-    m_authorLabel = new QLabel("by " + summary.author, this);
-    m_authorLabel->setObjectName("CardAuthor");
+    m_authorLabel = new QLabel("by " + summary.author, leftPanel);
+    m_authorLabel->setObjectName("RowAuthor");
 
-    auto *sep = new QFrame(this);
-    sep->setFrameShape(QFrame::HLine);
-    sep->setObjectName("CardSeparator");
+    // Laptime
+    const QString lt = formatLaptime(summary.laptime);
+    m_laptimeLabel = new QLabel(lt.isEmpty() ? "" : "⏱  " + lt, leftPanel);
+    m_laptimeLabel->setObjectName("RowLaptime");
 
-    m_filesArea = new QWidget(this);
+    // Wet badge
+    if (summary.wet) {
+        auto *wetLabel = new QLabel("🌧  WET", leftPanel);
+        wetLabel->setObjectName("RowWetBadge");
+        leftLayout->addWidget(wetLabel);
+    }
+
+    // Files area (expands after Load)
+    m_filesArea = new QWidget(leftPanel);
     m_filesArea->setLayout(new QVBoxLayout());
-    m_filesArea->layout()->setContentsMargins(0, 0, 0, 0);
+    m_filesArea->layout()->setContentsMargins(0, 4, 0, 0);
     m_filesArea->layout()->setSpacing(4);
 
-    m_expandBtn = new QPushButton("Load setups", this);
-    m_expandBtn->setObjectName("CardExpandBtn");
-    connect(m_expandBtn, &QPushButton::clicked, this, [this]() {
+    m_loadBtn = new QPushButton("Load setups", leftPanel);
+    m_loadBtn->setObjectName("RowLoadBtn");
+    connect(m_loadBtn, &QPushButton::clicked, this, [this]() {
         if (!m_detailsLoaded)
             emit detailsRequested(m_datapackId);
+        m_loadBtn->setEnabled(false);
+        m_loadBtn->setText("Loading…");
     });
 
-    root->addWidget(m_seriesLabel);
-    root->addWidget(m_carLabel);
-    root->addWidget(m_trackLabel);
-    root->addWidget(m_authorLabel);
-    root->addWidget(sep);
-    root->addWidget(m_filesArea);
-    root->addWidget(m_expandBtn);
-    root->addStretch();
+    leftLayout->addWidget(m_seriesLabel);
+    leftLayout->addSpacing(6);
+    leftLayout->addWidget(m_carLabel);
+    leftLayout->addWidget(m_trackLabel);
+    leftLayout->addWidget(m_authorLabel);
+    leftLayout->addWidget(m_laptimeLabel);
+    leftLayout->addStretch();
+    leftLayout->addWidget(m_filesArea);
+    leftLayout->addWidget(m_loadBtn);
+
+    // ── CENTER: track image ──────────────────────────────────────────
+    m_trackImg = new QLabel(this);
+    m_trackImg->setObjectName("RowTrackImg");
+    m_trackImg->setFixedSize(380, 210);
+    m_trackImg->setAlignment(Qt::AlignCenter);
+    m_trackImg->setScaledContents(false);
+
+    const QPixmap trackPix = loadPic("track", sanitizeFilename(summary.track.displayName));
+    if (!trackPix.isNull())
+        m_trackImg->setPixmap(trackPix.scaled(380, 210, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+
+    // ── RIGHT: car image ─────────────────────────────────────────────
+    m_carImg = new QLabel(this);
+    m_carImg->setObjectName("RowCarImg");
+    m_carImg->setFixedSize(380, 210);
+    m_carImg->setAlignment(Qt::AlignCenter);
+    m_carImg->setScaledContents(false);
+
+    const QPixmap carPix = loadPic("car", sanitizeFilename(summary.car.displayName));
+    if (!carPix.isNull())
+        m_carImg->setPixmap(carPix.scaled(380, 210, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+
+    outer->addWidget(leftPanel);
+    outer->addWidget(m_trackImg, 1);
+    outer->addWidget(m_carImg, 1);
 }
 
-void DatapackCard::setDetails(const QList<Setup> &setups)
+void DatapackRow::setDetails(const QList<Setup> &setups)
 {
-    if (m_detailsLoaded)
-        return;
+    if (m_detailsLoaded) return;
     m_detailsLoaded = true;
-    m_expandBtn->hide();
+    m_loadBtn->hide();
 
-    for (const Setup &s : setups)
-        buildFileRow(s, m_filesArea);
+    // Group: dry setups + wet setups together
+    QList<Setup> dry, wet;
+    for (const Setup &s : setups) {
+        if (s.wet) wet << s;
+        else       dry << s;
+    }
+
+    buildFileButtons(dry);
+    if (!wet.isEmpty()) {
+        auto *wetSep = new QLabel("— WET —", m_filesArea);
+        wetSep->setObjectName("RowWetSep");
+        m_filesArea->layout()->addWidget(wetSep);
+        buildFileButtons(wet);
+    }
 }
 
-void DatapackCard::buildFileRow(const Setup &setup, QWidget *container)
+void DatapackRow::buildFileButtons(const QList<Setup> &setups)
 {
-    auto *row = new QWidget(container);
-    row->setObjectName("FileRow");
-    row->setProperty("setupId", setup.id);
+    for (const Setup &setup : setups) {
+        auto *row = new QWidget(m_filesArea);
+        row->setObjectName("FileRow");
+        row->setProperty("setupId", setup.id);
 
-    auto *hl = new QHBoxLayout(row);
-    hl->setContentsMargins(0, 0, 0, 0);
-    hl->setSpacing(8);
+        auto *hl = new QHBoxLayout(row);
+        hl->setContentsMargins(0, 0, 0, 0);
+        hl->setSpacing(6);
 
-    auto *nameLabel = new QLabel(setup.displayName, row);
-    nameLabel->setObjectName("FileName");
-    nameLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        auto *nameLabel = new QLabel(setup.displayName, row);
+        nameLabel->setObjectName("FileName");
+        nameLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
-    auto *progressBar = new QProgressBar(row);
-    progressBar->setObjectName("FileProgress");
-    progressBar->setRange(0, 100);
-    progressBar->setValue(0);
-    progressBar->hide();
-    progressBar->setFixedHeight(4);
-    progressBar->setProperty("setupId", setup.id);
+        if (setup.wet) {
+            auto *wl = new QLabel("🌧", row);
+            wl->setObjectName("FileWet");
+            hl->addWidget(wl);
+        }
 
-    auto *dlBtn = new QPushButton(setup.isInstalled ? "✓ Installed" : "↓", row);
-    dlBtn->setObjectName(setup.isInstalled ? "BtnInstalled" : "BtnDownload");
-    dlBtn->setFixedWidth(80);
-    dlBtn->setProperty("setupId", setup.id);
-    dlBtn->setEnabled(!setup.isInstalled);
+        auto *pb = new QProgressBar(row);
+        pb->setObjectName("FileProgress");
+        pb->setRange(0, 100);
+        pb->hide();
+        pb->setFixedHeight(4);
+        pb->setProperty("setupId", setup.id);
 
-    connect(dlBtn, &QPushButton::clicked, this, [this, setup, dlBtn, progressBar]() {
-        dlBtn->setEnabled(false);
-        dlBtn->setText("…");
-        progressBar->show();
-        emit downloadRequested(setup);
-    });
+        auto *btn = new QPushButton(setup.isInstalled ? "✓" : "↓", row);
+        btn->setObjectName(setup.isInstalled ? "BtnInstalled" : "BtnDownload");
+        btn->setFixedWidth(36);
+        btn->setEnabled(!setup.isInstalled);
+        btn->setProperty("setupId", setup.id);
 
-    hl->addWidget(nameLabel);
-    hl->addWidget(progressBar);
-    hl->addWidget(dlBtn);
+        connect(btn, &QPushButton::clicked, this, [this, setup, btn, pb]() {
+            btn->setEnabled(false);
+            btn->setText("…");
+            pb->show();
+            emit downloadRequested(setup);
+        });
 
-    container->layout()->addWidget(row);
+        hl->addWidget(nameLabel);
+        hl->addWidget(pb);
+        hl->addWidget(btn);
+
+        m_filesArea->layout()->addWidget(row);
+    }
 }
 
 // ── State helpers ──────────────────────────────────────────────────────────
 
 template<typename T>
-static T *findBySetupId(QWidget *root, const QString &setupId)
+static T *findBySetupId(QWidget *root, const QString &id)
 {
-    for (QObject *obj : root->findChildren<QObject *>()) {
-        if (obj->property("setupId").toString() == setupId)
+    for (QObject *obj : root->findChildren<QObject *>())
+        if (obj->property("setupId").toString() == id)
             if (auto *w = qobject_cast<T *>(obj))
                 return w;
-    }
     return nullptr;
 }
 
-void DatapackCard::setDownloading(const Setup &setup, qint64 received, qint64 total)
+void DatapackRow::setDownloading(const Setup &setup, qint64 received, qint64 total)
 {
     if (auto *pb = findBySetupId<QProgressBar>(m_filesArea, setup.id)) {
         pb->show();
-        if (total > 0)
-            pb->setValue(static_cast<int>(received * 100 / total));
+        if (total > 0) pb->setValue(static_cast<int>(received * 100 / total));
     }
 }
 
-void DatapackCard::setInstalled(const Setup &setup)
+void DatapackRow::setInstalled(const Setup &setup)
 {
     if (auto *btn = findBySetupId<QPushButton>(m_filesArea, setup.id)) {
-        btn->setText("✓ Installed");
+        btn->setText("✓");
         btn->setEnabled(false);
-        btn->setStyleSheet("background-color:#0a2010;color:#40a060;"
-                           "border:1px solid #1a4020;border-radius:4px;"
-                           "padding:3px 8px;font-size:12px;");
+        btn->setStyleSheet("background:#0a2010;color:#40a060;border:1px solid #1a4020;"
+                           "border-radius:3px;font-size:13px;");
     }
     if (auto *pb = findBySetupId<QProgressBar>(m_filesArea, setup.id))
         pb->hide();
 }
 
-void DatapackCard::setFailed(const Setup &setup, const QString &reason)
+void DatapackRow::setFailed(const Setup &setup, const QString &)
 {
-    Q_UNUSED(reason)
     if (auto *btn = findBySetupId<QPushButton>(m_filesArea, setup.id)) {
-        btn->setText("Retry");
+        btn->setText("↓");
         btn->setEnabled(true);
     }
     if (auto *pb = findBySetupId<QProgressBar>(m_filesArea, setup.id))
@@ -166,7 +263,7 @@ void DatapackCard::setFailed(const Setup &setup, const QString &reason)
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// MainWindow — implementation
+// MainWindow
 // ══════════════════════════════════════════════════════════════════════════════
 
 MainWindow::MainWindow(QWidget *parent)
@@ -178,7 +275,7 @@ MainWindow::MainWindow(QWidget *parent)
     resize(1280, 800);
 
     setupUi();
-    setupStyleSheet();
+    applyStyleSheet();
 
     connect(m_manager, &SetupManager::loginSucceeded,        this, &MainWindow::onLoginSucceeded);
     connect(m_manager, &SetupManager::loginFailed,           this, &MainWindow::onLoginFailed);
@@ -193,34 +290,24 @@ void MainWindow::setupUi()
 {
     auto *central = new QWidget(this);
     setCentralWidget(central);
+    auto *root = new QVBoxLayout(central);
+    root->setContentsMargins(0, 0, 0, 0);
+    root->setSpacing(0);
 
-    auto *rootLayout = new QVBoxLayout(central);
-    rootLayout->setContentsMargins(0, 0, 0, 0);
-    rootLayout->setSpacing(0);
-
-    // ── Top bar ──
+    // ── Top bar ──────────────────────────────────────────────────────
     m_topBar = new QWidget(central);
     m_topBar->setObjectName("TopBar");
-    m_topBar->setFixedHeight(56);
+    m_topBar->setFixedHeight(52);
 
-    auto *topLayout = new QHBoxLayout(m_topBar);
-    topLayout->setContentsMargins(20, 0, 20, 0);
-    topLayout->setSpacing(12);
+    auto *tl = new QHBoxLayout(m_topBar);
+    tl->setContentsMargins(20, 0, 20, 0);
+    tl->setSpacing(10);
 
     m_logoLabel = new QLabel("GRID-AND-GO", m_topBar);
     m_logoLabel->setObjectName("LogoLabel");
 
-    m_statusLabel = new QLabel("Not logged in", m_topBar);
+    m_statusLabel = new QLabel("", m_topBar);
     m_statusLabel->setObjectName("StatusLabel");
-
-    m_loginBtn = new QPushButton("Login", m_topBar);
-    m_loginBtn->setObjectName("LoginBtn");
-    m_loginBtn->setFixedWidth(100);
-
-    m_refreshBtn = new QPushButton("↻ Refresh", m_topBar);
-    m_refreshBtn->setObjectName("RefreshBtn");
-    m_refreshBtn->setFixedWidth(100);
-    m_refreshBtn->setEnabled(false);
 
     m_weekCombo = new QComboBox(m_topBar);
     m_weekCombo->setObjectName("WeekCombo");
@@ -229,37 +316,45 @@ void MainWindow::setupUi()
     for (int w = 1; w <= 12; ++w)
         m_weekCombo->addItem(QString("Week %1").arg(w), w);
 
-    topLayout->addWidget(m_logoLabel);
-    topLayout->addStretch();
-    topLayout->addWidget(m_statusLabel);
-    topLayout->addWidget(m_weekCombo);
-    topLayout->addWidget(m_refreshBtn);
-    topLayout->addWidget(m_loginBtn);
+    m_refreshBtn = new QPushButton("↻  Refresh", m_topBar);
+    m_refreshBtn->setObjectName("RefreshBtn");
+    m_refreshBtn->setFixedWidth(100);
+    m_refreshBtn->setEnabled(false);
 
-    // ── Tab widget ──
+    m_loginBtn = new QPushButton("Login", m_topBar);
+    m_loginBtn->setObjectName("LoginBtn");
+    m_loginBtn->setFixedWidth(100);
+
+    tl->addWidget(m_logoLabel);
+    tl->addStretch();
+    tl->addWidget(m_statusLabel);
+    tl->addWidget(m_weekCombo);
+    tl->addWidget(m_refreshBtn);
+    tl->addWidget(m_loginBtn);
+
+    // ── Tabs ─────────────────────────────────────────────────────────
     m_tabs = new QTabWidget(central);
     m_tabs->setObjectName("MainTabs");
     m_tabs->setDocumentMode(true);
 
-    auto *placeholder = new QLabel("Login to load setups", m_tabs);
-    placeholder->setObjectName("PlaceholderLabel");
-    placeholder->setAlignment(Qt::AlignCenter);
-    m_tabs->addTab(placeholder, "Welcome");
+    auto *ph = new QLabel("Press Login to load setups", m_tabs);
+    ph->setObjectName("PlaceholderLabel");
+    ph->setAlignment(Qt::AlignCenter);
+    m_tabs->addTab(ph, "Welcome");
 
-    rootLayout->addWidget(m_topBar);
-    rootLayout->addWidget(m_tabs, 1);
+    root->addWidget(m_topBar);
+    root->addWidget(m_tabs, 1);
 
     connect(m_loginBtn,   &QPushButton::clicked, this, &MainWindow::onLoginClicked);
     connect(m_refreshBtn, &QPushButton::clicked, this, &MainWindow::onRefreshClicked);
 }
 
-// ── Auth slots ─────────────────────────────────────────────────────────────
+// ── Auth ───────────────────────────────────────────────────────────────────
 
 void MainWindow::onLoginClicked()
 {
     m_loginBtn->setEnabled(false);
     m_loginBtn->setText("…");
-    m_statusLabel->setText("Authenticating…");
     m_manager->login();
 }
 
@@ -268,13 +363,12 @@ void MainWindow::onLoginSucceeded()
     m_loginBtn->setText("Logout");
     m_loginBtn->setEnabled(true);
     m_refreshBtn->setEnabled(true);
-    m_statusLabel->setText("Logged in");
 
-    // Выставляем текущую неделю
     const IracingWeek cur = IracingWeek::current();
     m_currentWeek = cur.week;
     m_weekCombo->setCurrentIndex(cur.week - 1);
     m_weekCombo->setEnabled(true);
+
     connect(m_weekCombo, &QComboBox::currentIndexChanged, this, [this](int idx) {
         m_currentWeek = idx + 1;
         applyWeekFilter(m_currentWeek);
@@ -285,8 +379,8 @@ void MainWindow::onLoginSucceeded()
         m_manager->logout();
         m_loginBtn->setText("Login");
         m_refreshBtn->setEnabled(false);
-        m_statusLabel->setText("Not logged in");
         m_weekCombo->setEnabled(false);
+        m_statusLabel->setText("");
         disconnect(m_loginBtn, nullptr, this, nullptr);
         connect(m_loginBtn, &QPushButton::clicked, this, &MainWindow::onLoginClicked);
         clearTabs();
@@ -297,16 +391,14 @@ void MainWindow::onLoginFailed(const QString &reason)
 {
     m_loginBtn->setText("Login");
     m_loginBtn->setEnabled(true);
-    m_statusLabel->setText("Login failed");
     QMessageBox::warning(this, "Login failed", reason);
 }
 
-// ── Data slots ─────────────────────────────────────────────────────────────
+// ── Data ───────────────────────────────────────────────────────────────────
 
 void MainWindow::onRefreshClicked()
 {
     m_refreshBtn->setEnabled(false);
-    m_statusLabel->setText("Loading setups…");
     clearTabs();
     m_manager->refreshDatapackList();
 }
@@ -321,27 +413,26 @@ void MainWindow::onSetupListUpdated(const QList<Setup> &setups)
 
 void MainWindow::onDatapackDetailsLoaded(const QString &datapackId, const QList<Setup> &setups)
 {
-    if (DatapackCard *card = findCard(datapackId))
-        card->setDetails(setups);
+    if (DatapackRow *row = findRow(datapackId))
+        row->setDetails(setups);
 }
 
 void MainWindow::onDownloadProgress(const Setup &setup, qint64 received, qint64 total)
 {
-    if (DatapackCard *card = findCard(setup.datapackId))
-        card->setDownloading(setup, received, total);
+    if (DatapackRow *row = findRow(setup.datapackId))
+        row->setDownloading(setup, received, total);
 }
 
-void MainWindow::onInstallSucceeded(const Setup &setup, const QString &path)
+void MainWindow::onInstallSucceeded(const Setup &setup, const QString &)
 {
-    Q_UNUSED(path)
-    if (DatapackCard *card = findCard(setup.datapackId))
-        card->setInstalled(setup);
+    if (DatapackRow *row = findRow(setup.datapackId))
+        row->setInstalled(setup);
 }
 
 void MainWindow::onInstallFailed(const Setup &setup, const QString &reason)
 {
-    if (DatapackCard *card = findCard(setup.datapackId))
-        card->setFailed(setup, reason);
+    if (DatapackRow *row = findRow(setup.datapackId))
+        row->setFailed(setup, reason);
     QMessageBox::warning(this, "Install failed", reason);
 }
 
@@ -350,13 +441,13 @@ void MainWindow::downloadAndInstall(const Setup &setup)
     m_manager->downloadAndInstall(setup);
 }
 
-// ── Tab / card management ──────────────────────────────────────────────────
+// ── Tabs ───────────────────────────────────────────────────────────────────
 
 void MainWindow::clearTabs()
 {
     m_tabs->clear();
     m_seriesTabs.clear();
-    m_cards.clear();
+    m_rows.clear();
 }
 
 QScrollArea *MainWindow::getOrCreateTab(const QString &series)
@@ -366,18 +457,16 @@ QScrollArea *MainWindow::getOrCreateTab(const QString &series)
 
     auto *content = new QWidget();
     content->setObjectName("TabContent");
-
-    auto *grid = new QGridLayout(content);
-    grid->setSpacing(12);
-    grid->setContentsMargins(16, 16, 16, 16);
-    grid->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    auto *vl = new QVBoxLayout(content);
+    vl->setContentsMargins(0, 0, 0, 0);
+    vl->setSpacing(1);
+    vl->setAlignment(Qt::AlignTop);
 
     auto *scroll = new QScrollArea();
     scroll->setWidgetResizable(true);
     scroll->setWidget(content);
     scroll->setFrameShape(QFrame::NoFrame);
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    scroll->setObjectName("TabScroll");
 
     m_tabs->addTab(scroll, series);
     m_seriesTabs[series] = scroll;
@@ -386,187 +475,234 @@ QScrollArea *MainWindow::getOrCreateTab(const QString &series)
 
 void MainWindow::populateTabs(const QList<Setup> &setups)
 {
+    // Group by series, deduplicate by datapackId
     QMap<QString, QMap<QString, Setup>> bySeries;
-    for (const Setup &s : setups) {
+    for (const Setup &s : setups)
         if (!bySeries[s.series].contains(s.datapackId))
             bySeries[s.series][s.datapackId] = s;
-    }
-
-    const int columns = 3;
 
     for (auto it = bySeries.begin(); it != bySeries.end(); ++it) {
         QScrollArea *scroll = getOrCreateTab(it.key());
-        QGridLayout *grid   = qobject_cast<QGridLayout *>(scroll->widget()->layout());
+        QVBoxLayout *vl     = qobject_cast<QVBoxLayout *>(scroll->widget()->layout());
 
-        int row = 0, col = 0;
-        for (const Setup &summary : it.value()) {
-            auto *card = new DatapackCard(summary, scroll->widget());
+        // Sort by laptime ascending (fastest first), zeros go last
+        QList<Setup> sorted = it.value().values();
+        std::sort(sorted.begin(), sorted.end(), [](const Setup &a, const Setup &b) {
+            if (a.laptime <= 0) return false;
+            if (b.laptime <= 0) return true;
+            return a.laptime < b.laptime;
+        });
 
-            connect(card, &DatapackCard::detailsRequested,
-                    m_manager, &SetupManager::loadDatapackDetails);
-            connect(card, &DatapackCard::downloadRequested,
-                    this, &MainWindow::downloadAndInstall);
+        for (const Setup &summary : sorted) {
+            auto *rowWidget = new DatapackRow(summary, scroll->widget());
+            rowWidget->setProperty("week", summary.week);
 
-            card->setProperty("week", summary.week);
-            grid->addWidget(card, row, col);
-            m_cards[summary.datapackId] = card;
+            connect(rowWidget, &DatapackRow::detailsRequested,
+                    m_manager,  &SetupManager::loadDatapackDetails);
+            connect(rowWidget, &DatapackRow::downloadRequested,
+                    this,       &MainWindow::downloadAndInstall);
 
-            if (++col >= columns) { col = 0; ++row; }
+            // Separator line
+            auto *sep = new QFrame(scroll->widget());
+            sep->setFrameShape(QFrame::HLine);
+            sep->setObjectName("RowSeparator");
+
+            vl->addWidget(rowWidget);
+            vl->addWidget(sep);
+
+            m_rows[summary.datapackId] = rowWidget;
         }
     }
 }
 
-DatapackCard *MainWindow::findCard(const QString &datapackId)
+DatapackRow *MainWindow::findRow(const QString &datapackId)
 {
-    return m_cards.value(datapackId, nullptr);
+    return m_rows.value(datapackId, nullptr);
 }
-
 
 void MainWindow::applyWeekFilter(int week)
 {
-    for (auto it = m_cards.begin(); it != m_cards.end(); ++it) {
-        DatapackCard *card = it.value();
-        // DatapackCard хранит week в dynamic property, выставленном при создании
-        const int cardWeek = card->property("week").toInt();
-        card->setVisible(cardWeek == 0 || cardWeek == week);
+    for (auto it = m_rows.begin(); it != m_rows.end(); ++it) {
+        DatapackRow *row = it.value();
+        const int rowWeek = row->property("week").toInt();
+        row->setVisible(rowWeek == 0 || rowWeek == week);
+
+        // Also hide/show the separator that follows the row
+        // Separator is the next sibling widget
+        QWidget *parent = qobject_cast<QWidget *>(row->parent());
+        if (!parent) continue;
+        QVBoxLayout *vl = qobject_cast<QVBoxLayout *>(parent->layout());
+        if (!vl) continue;
+        const int idx = vl->indexOf(row);
+        if (idx >= 0 && idx + 1 < vl->count()) {
+            if (auto *item = vl->itemAt(idx + 1))
+                if (auto *sep = qobject_cast<QFrame *>(item->widget()))
+                    sep->setVisible(row->isVisible());
+        }
     }
 }
 
-// ── Style Sheet ────────────────────────────────────────────────────────────
+// ── Style ──────────────────────────────────────────────────────────────────
 
-void MainWindow::setupStyleSheet()
+void MainWindow::applyStyleSheet()
 {
     qApp->setStyle("Fusion");
 
     const QString qss = R"(
 QWidget {
-    background-color: #0f1117;
-    color: #d0d6e0;
+    background-color: #0d1117;
+    color: #c9d1d9;
     font-family: "Segoe UI", "SF Pro Display", sans-serif;
     font-size: 13px;
 }
+
+/* Top bar */
 #TopBar {
-    background-color: #080b10;
-    border-bottom: 1px solid #1e2535;
+    background-color: #080c12;
+    border-bottom: 1px solid #1a2030;
 }
 #LogoLabel {
     color: #c8a84b;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
-    letter-spacing: 3px;
+    letter-spacing: 4px;
 }
 #StatusLabel {
-    color: #5a6478;
+    color: #3d5070;
     font-size: 12px;
 }
+
+/* Buttons */
 QPushButton {
-    background-color: #1a2030;
-    color: #8fa0c0;
-    border: 1px solid #2a3348;
-    border-radius: 5px;
-    padding: 6px 14px;
-    font-weight: 500;
+    background-color: #161c28;
+    color: #7090b0;
+    border: 1px solid #202c40;
+    border-radius: 4px;
+    padding: 5px 14px;
+    font-size: 12px;
 }
-QPushButton:hover {
-    background-color: #1e2a40;
-    color: #c8d4e8;
-    border-color: #3a4a68;
-}
-QPushButton:pressed { background-color: #151e30; }
-QPushButton:disabled { color: #3a4458; border-color: #1a2030; }
-#LoginBtn { background-color: #1a3060; color: #6090e0; border-color: #2a4080; }
-#LoginBtn:hover { background-color: #1e3870; color: #80b0ff; }
+QPushButton:hover  { background-color: #1a2235; color: #a0b8d0; border-color: #304060; }
+QPushButton:pressed { background-color: #111825; }
+QPushButton:disabled { color: #2a3545; border-color: #161c28; }
+
+#LoginBtn  { background-color: #0f2040; color: #4878c0; border-color: #1a3060; }
+#LoginBtn:hover { background-color: #132850; color: #6898e0; }
+#RefreshBtn { background-color: #101810; color: #406840; border-color: #1a2c1a; }
+#RefreshBtn:hover { background-color: #142014; color: #60a060; }
+
+/* Week combo */
 #WeekCombo {
-    background-color: #1a2030;
+    background-color: #161c28;
     color: #c8a84b;
-    border: 1px solid #2a3a20;
-    border-radius: 5px;
+    border: 1px solid #2a3020;
+    border-radius: 4px;
     padding: 4px 10px;
     font-weight: 600;
     font-size: 12px;
 }
-#WeekCombo:disabled { color: #3a4458; border-color: #1a2030; }
-#WeekCombo QAbstractItemView {
-    background-color: #131820;
-    color: #c8d4e8;
-    border: 1px solid #2a3448;
-    selection-background-color: #1e2a40;
+#WeekCombo:disabled { color: #2a3040; }
+QComboBox QAbstractItemView {
+    background-color: #0d1117;
+    color: #c9d1d9;
+    border: 1px solid #202c40;
+    selection-background-color: #1a2235;
 }
-QTabWidget::pane { border: none; background-color: #0f1117; }
-QTabBar { background-color: #080b10; }
+
+/* Tabs */
+QTabWidget::pane { border: none; }
+QTabBar { background-color: #080c12; }
 QTabBar::tab {
-    background-color: transparent;
-    color: #4a5878;
-    padding: 10px 20px;
+    background: transparent;
+    color: #3d5070;
+    padding: 9px 18px;
     border: none;
     border-bottom: 2px solid transparent;
-    font-weight: 500;
-    letter-spacing: 1px;
     font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 QTabBar::tab:selected { color: #c8a84b; border-bottom: 2px solid #c8a84b; }
-QTabBar::tab:hover:!selected { color: #8090b0; }
-QScrollArea, #TabScroll { background-color: #0f1117; border: none; }
-QScrollBar:vertical { background: #0f1117; width: 6px; margin: 0; }
-QScrollBar::handle:vertical { background: #2a3448; border-radius: 3px; min-height: 30px; }
+QTabBar::tab:hover:!selected { color: #6080a0; }
+
+/* Scroll */
+QScrollArea { background: #0d1117; border: none; }
+QScrollBar:vertical { background: #0d1117; width: 5px; }
+QScrollBar::handle:vertical { background: #1e2c40; border-radius: 2px; min-height: 30px; }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
-#DatapackCard {
-    background-color: #131820;
-    border: 1px solid #1e2838;
-    border-radius: 8px;
-    min-width: 300px;
-    max-width: 400px;
+
+/* Row */
+#DatapackRow {
+    background-color: #0d1117;
+    min-height: 200px;
+    max-height: 300px;
 }
-#DatapackCard:hover { border-color: #2a3a58; background-color: #161d28; }
-#SeriesBadge {
+#DatapackRow:hover { background-color: #0f1520; }
+
+#RowSeparator { color: #141c28; }
+
+#RowLeft { background-color: transparent; }
+
+#RowSeriesBadge {
     color: #c8a84b;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 2px;
-    background-color: #1e1800;
+    background-color: #1c1500;
     border-radius: 3px;
     padding: 2px 8px;
+    qproperty-maximumWidth: 120;
 }
-#CardCarName { color: #e0e8f8; font-size: 15px; font-weight: 600; }
-#CardTrackName { color: #7888a8; font-size: 12px; }
-#CardAuthor { color: #4a5878; font-size: 11px; font-style: italic; }
-#CardSeparator { color: #1e2838; }
-#FileRow { background-color: transparent; }
-#FileName { color: #8898b8; font-size: 12px; }
-#CardExpandBtn {
-    background-color: #0f1820;
-    color: #4a6090;
-    border: 1px dashed #1e2e48;
-    border-radius: 4px;
-    padding: 5px;
+#RowCarName  { color: #e6edf3; font-size: 16px; font-weight: 600; }
+#RowTrackName { color: #6080a0; font-size: 13px; }
+#RowAuthor   { color: #3d5070; font-size: 11px; font-style: italic; }
+#RowLaptime  { color: #508060; font-size: 12px; font-family: "Consolas", monospace; }
+#RowWetBadge { color: #4090c0; font-size: 11px; font-weight: 600; }
+#RowWetSep   { color: #3d5070; font-size: 10px; font-style: italic; }
+
+/* Images */
+#RowTrackImg, #RowCarImg { background-color: #080c12; }
+
+/* Load btn */
+#RowLoadBtn {
+    background-color: #0d1520;
+    color: #3d5878;
+    border: 1px dashed #1a2838;
+    border-radius: 3px;
+    padding: 4px;
     font-size: 11px;
 }
-#CardExpandBtn:hover { border-color: #3a5080; color: #6080b0; background-color: #111e30; }
+#RowLoadBtn:hover { color: #5878a0; border-color: #2a3c58; }
+
+/* File rows */
+#FileRow  { background: transparent; }
+#FileName { color: #7090a8; font-size: 12px; }
+#FileWet  { color: #4090c0; }
+
 #BtnDownload {
-    background-color: #0a2040;
-    color: #4080c0;
-    border: 1px solid #1a3060;
-    border-radius: 4px;
-    padding: 3px 8px;
-    font-size: 12px;
+    background-color: #081828;
+    color: #3868a8;
+    border: 1px solid #102038;
+    border-radius: 3px;
+    font-size: 14px;
     font-weight: 600;
+    padding: 2px;
 }
-#BtnDownload:hover { background-color: #0f2a58; color: #60a0e0; }
+#BtnDownload:hover { background-color: #0c2040; color: #5888c8; }
 #BtnInstalled {
-    background-color: #0a2010;
-    color: #40a060;
-    border: 1px solid #1a4020;
-    border-radius: 4px;
-    padding: 3px 8px;
-    font-size: 12px;
+    background-color: #081808;
+    color: #388060;
+    border: 1px solid #103020;
+    border-radius: 3px;
+    font-size: 13px;
+    padding: 2px;
 }
+
 QProgressBar#FileProgress {
-    background-color: #1a2030;
-    border: none;
-    border-radius: 2px;
+    background: #1a2030; border: none; border-radius: 2px;
 }
-QProgressBar#FileProgress::chunk { background-color: #4080c0; border-radius: 2px; }
-#PlaceholderLabel { color: #2a3448; font-size: 18px; font-weight: 300; letter-spacing: 2px; }
+QProgressBar#FileProgress::chunk { background: #3868a8; border-radius: 2px; }
+
+#PlaceholderLabel { color: #1e2c40; font-size: 20px; letter-spacing: 2px; }
     )";
 
     qApp->setStyleSheet(qss);

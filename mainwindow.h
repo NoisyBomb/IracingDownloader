@@ -17,15 +17,15 @@
 #include "iracingweek.h"
 
 // ══════════════════════════════════════════════════════════════════════════════
-// DatapackCard
+// DatapackRow  — одна горизонтальная строка (датапак = машина + трек)
 // ══════════════════════════════════════════════════════════════════════════════
 
-class DatapackCard : public QWidget
+class DatapackRow : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit DatapackCard(const Setup &summary, QWidget *parent = nullptr);
+    explicit DatapackRow(const Setup &summary, QWidget *parent = nullptr);
 
     QString datapackId() const { return m_datapackId; }
 
@@ -39,17 +39,31 @@ signals:
     void detailsRequested(const QString &datapackId);
 
 private:
-    void buildSummaryUi(const Setup &summary);
-    void buildFileRow(const Setup &setup, QWidget *container);
+    void buildUi(const Setup &summary);
+    void buildFileButtons(const QList<Setup> &setups);
 
     QString      m_datapackId;
-    QLabel      *m_carLabel      = nullptr;
-    QLabel      *m_trackLabel    = nullptr;
-    QLabel      *m_authorLabel   = nullptr;
-    QLabel      *m_seriesLabel   = nullptr;
-    QWidget     *m_filesArea     = nullptr;
-    QPushButton *m_expandBtn     = nullptr;
+
+    // Left panel
+    QLabel      *m_seriesLabel  = nullptr;
+    QLabel      *m_carLabel     = nullptr;
+    QLabel      *m_trackLabel   = nullptr;
+    QLabel      *m_authorLabel  = nullptr;
+    QLabel      *m_laptimeLabel = nullptr;
+
+    // Center: track image
+    QLabel      *m_trackImg     = nullptr;
+
+    // Right: car image
+    QLabel      *m_carImg       = nullptr;
+
+    // Bottom: file buttons area (shown after Load)
+    QWidget     *m_filesArea    = nullptr;
+    QPushButton *m_loadBtn      = nullptr;
     bool         m_detailsLoaded = false;
+
+    // Laptime formatting
+    static QString formatLaptime(float seconds);
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -82,26 +96,27 @@ private slots:
 
 private:
     void setupUi();
-    void setupStyleSheet();
+    void applyStyleSheet();
     void populateTabs(const QList<Setup> &setups);
     void clearTabs();
+    QScrollArea *getOrCreateTab(const QString &series);
+    DatapackRow *findRow(const QString &datapackId);
     void applyWeekFilter(int week);
-    QScrollArea  *getOrCreateTab(const QString &series);
-    DatapackCard *findCard(const QString &datapackId);
 
+    // Top bar
     QWidget     *m_topBar      = nullptr;
     QLabel      *m_logoLabel   = nullptr;
     QLabel      *m_statusLabel = nullptr;
-    QPushButton *m_loginBtn    = nullptr;
+    QComboBox   *m_weekCombo   = nullptr;
     QPushButton *m_refreshBtn  = nullptr;
+    QPushButton *m_loginBtn    = nullptr;
+
+    int          m_currentWeek = 1;
 
     QTabWidget  *m_tabs = nullptr;
 
-    QComboBox   *m_weekCombo   = nullptr;
-    int          m_currentWeek = 1;
-
-    QMap<QString, QScrollArea *>  m_seriesTabs;
-    QMap<QString, DatapackCard *> m_cards;
+    QMap<QString, QScrollArea *> m_seriesTabs;
+    QMap<QString, DatapackRow *> m_rows;
 
     SetupManager *m_manager = nullptr;
 };
