@@ -177,7 +177,6 @@ void DatapackRow::setDetails(const QList<Setup> &setups)
 {
     if (m_detailsLoaded) return;
     m_detailsLoaded = true;
-    m_loadBtn->hide();
 
     // Group: dry setups + wet setups together
     QList<Setup> dry, wet;
@@ -193,6 +192,16 @@ void DatapackRow::setDetails(const QList<Setup> &setups)
         m_filesArea->layout()->addWidget(wetSep);
         buildFileButtons(wet);
     }
+
+    // Turn load button into collapse/expand toggle
+    m_loadBtn->setText("▲  Hide setups");
+    m_loadBtn->setEnabled(true);
+    disconnect(m_loadBtn, nullptr, nullptr, nullptr);
+    connect(m_loadBtn, &QPushButton::clicked, this, [this]() {
+        const bool visible = m_filesArea->isVisible();
+        m_filesArea->setVisible(!visible);
+        m_loadBtn->setText(visible ? "▼  Show setups" : "▲  Hide setups");
+    });
 }
 
 void DatapackRow::buildFileButtons(const QList<Setup> &setups)
@@ -499,7 +508,6 @@ QScrollArea *MainWindow::getOrCreateTab(const QString &series)
 
 void MainWindow::populateTabs(const QList<Setup> &setups)
 {
-    // Group by series, deduplicate by datapackId
     QMap<QString, QMap<QString, Setup>> bySeries;
     for (const Setup &s : setups)
         if (!bySeries[s.series].contains(s.datapackId))
@@ -509,7 +517,6 @@ void MainWindow::populateTabs(const QList<Setup> &setups)
         QScrollArea *scroll = getOrCreateTab(it.key());
         QVBoxLayout *vl     = qobject_cast<QVBoxLayout *>(scroll->widget()->layout());
 
-        // Sort by laptime ascending (fastest first), zeros go last
         QList<Setup> sorted = it.value().values();
         std::sort(sorted.begin(), sorted.end(), [](const Setup &a, const Setup &b) {
             if (a.laptime <= 0) return false;
@@ -526,7 +533,6 @@ void MainWindow::populateTabs(const QList<Setup> &setups)
             connect(rowWidget, &DatapackRow::downloadRequested,
                     this,       &MainWindow::downloadAndInstall);
 
-            // Separator line
             auto *sep = new QFrame(scroll->widget());
             sep->setFrameShape(QFrame::HLine);
             sep->setObjectName("RowSeparator");
@@ -549,20 +555,18 @@ void MainWindow::applyWeekFilter(int week)
     for (auto it = m_rows.begin(); it != m_rows.end(); ++it) {
         DatapackRow *row = it.value();
         const int rowWeek = row->property("week").toInt();
-        row->setVisible(rowWeek == 0 || rowWeek == week);
+        const bool visible = (rowWeek == 0 || rowWeek == week);
+        row->setVisible(visible);
 
-        // Also hide/show the separator that follows the row
-        // Separator is the next sibling widget
-        QWidget *parent = qobject_cast<QWidget *>(row->parent());
-        if (!parent) continue;
-        QVBoxLayout *vl = qobject_cast<QVBoxLayout *>(parent->layout());
+        QWidget *par = qobject_cast<QWidget *>(row->parent());
+        if (!par) continue;
+        QVBoxLayout *vl = qobject_cast<QVBoxLayout *>(par->layout());
         if (!vl) continue;
         const int idx = vl->indexOf(row);
-        if (idx >= 0 && idx + 1 < vl->count()) {
+        if (idx >= 0 && idx + 1 < vl->count())
             if (auto *item = vl->itemAt(idx + 1))
                 if (auto *sep = qobject_cast<QFrame *>(item->widget()))
-                    sep->setVisible(row->isVisible());
-        }
+                    sep->setVisible(visible);
     }
 }
 
