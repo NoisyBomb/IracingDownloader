@@ -58,7 +58,7 @@ void DatapackRow::loadImages()
     if (!m_trackFile.isEmpty()) {
         const QPixmap p = loadPic("track", m_trackFile);
         if (!p.isNull())
-            m_trackImg->setPixmap(p.scaled(360, 240, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+            m_trackImg->setPixmap(p.scaled(420, 200, Qt::KeepAspectRatio, Qt::SmoothTransformation));
         else
             m_trackImg->hide();
     } else {
@@ -68,7 +68,7 @@ void DatapackRow::loadImages()
     if (!m_carFile.isEmpty()) {
         const QPixmap p = loadPic("car", m_carFile);
         if (!p.isNull())
-            m_carImg->setPixmap(p.scaled(420, 240, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+            m_carImg->setPixmap(p.scaled(420, 200, Qt::KeepAspectRatio, Qt::SmoothTransformation));
         else
             m_carImg->hide();
     } else {
@@ -159,11 +159,11 @@ void DatapackRow::buildUi(const Setup &summary)
     // ── CENTER: track image ──────────────────────────────────────────
     m_trackImg = new QLabel(this);
     m_trackImg->setObjectName("RowTrackImg");
-    m_trackImg->setFixedSize(360, 240);
+    m_trackImg->setFixedSize(420, 200);
     m_trackImg->setAlignment(Qt::AlignCenter);
     m_trackImg->setScaledContents(false);
     m_trackImg->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    m_trackImg->setMaximumHeight(240);
+    m_trackImg->setMaximumHeight(200);
 
     // Images loaded lazily via loadImages()
     m_trackFile = TrackRegistry::instance().imageFile(summary.track.displayName);
@@ -172,11 +172,11 @@ void DatapackRow::buildUi(const Setup &summary)
     // ── RIGHT: car image ─────────────────────────────────────────────
     m_carImg = new QLabel(this);
     m_carImg->setObjectName("RowCarImg");
-    m_carImg->setFixedSize(420, 240);
+    m_carImg->setFixedSize(420, 200);
     m_carImg->setAlignment(Qt::AlignCenter);
     m_carImg->setScaledContents(false);
     m_carImg->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    m_carImg->setMaximumHeight(240);
+    m_carImg->setMaximumHeight(200);
 
     outer->addWidget(leftPanel, 0, Qt::AlignTop);
     outer->addWidget(m_trackImg, 0, Qt::AlignTop);
@@ -615,7 +615,7 @@ QWidget {
     letter-spacing: 5px;
 }
 #StatusLabel {
-    color: #2a3a5a;
+    color: #4a6080;
     font-size: 11px;
     letter-spacing: 1px;
 }
@@ -723,7 +723,7 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
 #DatapackRow {
     background: rgba(21,27,40,0.6);
     border-bottom: 1px solid rgba(255,255,255,0.04);
-    min-height: 240px;
+    min-height: 200px;
 }
 #DatapackRow:hover {
     background: rgba(225,6,0,0.04);
@@ -791,8 +791,8 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
 
 /* ── IMAGES ───────────────────────────────────────────────────────── */
 #RowTrackImg, #RowCarImg {
-    background: rgba(255,255,255,0.02);
-    border-left: 1px solid rgba(255,255,255,0.04);
+    background: transparent;
+    border: none;
 }
 
 /* ── LOAD / TOGGLE BTN ────────────────────────────────────────────── */
