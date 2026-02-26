@@ -89,7 +89,7 @@ void DatapackRow::buildUi(const Setup &summary)
     // ── Outer layout: left info | center track img | right car img ──
     auto *outer = new QHBoxLayout(this);
     outer->setContentsMargins(16, 12, 16, 12);
-    outer->setSpacing(16);
+    outer->setSpacing(32);
     outer->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     // ── LEFT PANEL ──────────────────────────────────────────────────
@@ -618,6 +618,7 @@ QWidget {
     color: #4a6080;
     font-size: 11px;
     letter-spacing: 1px;
+    background: transparent;
 }
 
 /* ── BUTTONS ──────────────────────────────────────────────────────── */
