@@ -58,12 +58,21 @@ void DatapackRow::loadImages()
     if (!m_trackFile.isEmpty()) {
         const QPixmap p = loadPic("track", m_trackFile);
         if (!p.isNull())
-            m_trackImg->setPixmap(p.scaled(380, 210, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+            m_trackImg->setPixmap(p.scaled(420, 240, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        else
+            m_trackImg->hide();
+    } else {
+        m_trackImg->hide();
     }
+
     if (!m_carFile.isEmpty()) {
         const QPixmap p = loadPic("car", m_carFile);
         if (!p.isNull())
-            m_carImg->setPixmap(p.scaled(380, 210, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+            m_carImg->setPixmap(p.scaled(420, 240, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        else
+            m_carImg->hide();
+    } else {
+        m_carImg->hide();
     }
 }
 
@@ -79,17 +88,20 @@ void DatapackRow::buildUi(const Setup &summary)
 {
     // ── Outer layout: left info | center track img | right car img ──
     auto *outer = new QHBoxLayout(this);
-    outer->setContentsMargins(0, 0, 0, 0);
-    outer->setSpacing(0);
+    outer->setContentsMargins(16, 12, 16, 12);
+    outer->setSpacing(16);
+    outer->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     // ── LEFT PANEL ──────────────────────────────────────────────────
     auto *leftPanel = new QWidget(this);
     leftPanel->setObjectName("RowLeft");
-    leftPanel->setFixedWidth(340);
+    leftPanel->setFixedWidth(320);
+    leftPanel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
 
     auto *leftLayout = new QVBoxLayout(leftPanel);
-    leftLayout->setContentsMargins(20, 18, 20, 18);
+    leftLayout->setContentsMargins(12, 16, 12, 16);
     leftLayout->setSpacing(4);
+    leftLayout->setAlignment(Qt::AlignTop);
 
     m_seriesLabel = new QLabel(summary.series.toUpper(), leftPanel);
     m_seriesLabel->setObjectName("RowSeriesBadge");
@@ -147,9 +159,11 @@ void DatapackRow::buildUi(const Setup &summary)
     // ── CENTER: track image ──────────────────────────────────────────
     m_trackImg = new QLabel(this);
     m_trackImg->setObjectName("RowTrackImg");
-    m_trackImg->setFixedSize(380, 210);
+    m_trackImg->setFixedSize(420, 240);
     m_trackImg->setAlignment(Qt::AlignCenter);
     m_trackImg->setScaledContents(false);
+    m_trackImg->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    m_trackImg->setMaximumHeight(240);
 
     // Images loaded lazily via loadImages()
     m_trackFile = TrackRegistry::instance().imageFile(summary.track.displayName);
@@ -158,13 +172,16 @@ void DatapackRow::buildUi(const Setup &summary)
     // ── RIGHT: car image ─────────────────────────────────────────────
     m_carImg = new QLabel(this);
     m_carImg->setObjectName("RowCarImg");
-    m_carImg->setFixedSize(380, 210);
+    m_carImg->setFixedSize(420, 240);
     m_carImg->setAlignment(Qt::AlignCenter);
     m_carImg->setScaledContents(false);
+    m_carImg->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    m_carImg->setMaximumHeight(240);
 
-    outer->addWidget(leftPanel);
-    outer->addWidget(m_trackImg, 1);
-    outer->addWidget(m_carImg, 1);
+    outer->addWidget(leftPanel, 0, Qt::AlignTop);
+    outer->addWidget(m_trackImg, 0, Qt::AlignTop);
+    outer->addWidget(m_carImg, 0, Qt::AlignTop);
+    outer->addStretch(1);
 }
 
 void DatapackRow::showEvent(QShowEvent *event)
@@ -577,159 +594,270 @@ void MainWindow::applyStyleSheet()
     qApp->setStyle("Fusion");
 
     const QString qss = R"(
+/* ── BASE ─────────────────────────────────────────────────────────── */
 QWidget {
-    background-color: #0d1117;
-    color: #c9d1d9;
-    font-family: "Segoe UI", "SF Pro Display", sans-serif;
+    background-color: #0A0E1A;
+    color: #94A3B8;
+    font-family: "Segoe UI", "Inter", sans-serif;
     font-size: 13px;
 }
 
-/* Top bar */
+/* ── TOP BAR ──────────────────────────────────────────────────────── */
 #TopBar {
-    background-color: #080c12;
-    border-bottom: 1px solid #1a2030;
+    background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+        stop:0 #0A0E1A, stop:0.5 #0f1525, stop:1 #0A0E1A);
+    border-bottom: 1px solid rgba(225,6,0,0.3);
 }
 #LogoLabel {
-    color: #c8a84b;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 4px;
+    color: #E10600;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 5px;
 }
 #StatusLabel {
-    color: #3d5070;
-    font-size: 12px;
+    color: #2a3a5a;
+    font-size: 11px;
+    letter-spacing: 1px;
 }
 
-/* Buttons */
+/* ── BUTTONS ──────────────────────────────────────────────────────── */
 QPushButton {
-    background-color: #161c28;
-    color: #7090b0;
-    border: 1px solid #202c40;
-    border-radius: 4px;
+    background-color: rgba(255,255,255,0.04);
+    color: #64748B;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 5px;
     padding: 5px 14px;
     font-size: 12px;
 }
-QPushButton:hover  { background-color: #1a2235; color: #a0b8d0; border-color: #304060; }
-QPushButton:pressed { background-color: #111825; }
-QPushButton:disabled { color: #2a3545; border-color: #161c28; }
+QPushButton:hover {
+    background-color: rgba(225,6,0,0.08);
+    color: #94A3B8;
+    border-color: rgba(225,6,0,0.3);
+}
+QPushButton:pressed { background-color: rgba(225,6,0,0.15); }
+QPushButton:disabled { color: #1e2a3a; border-color: rgba(255,255,255,0.03); }
 
-#LoginBtn  { background-color: #0f2040; color: #4878c0; border-color: #1a3060; }
-#LoginBtn:hover { background-color: #132850; color: #6898e0; }
-#RefreshBtn { background-color: #101810; color: #406840; border-color: #1a2c1a; }
-#RefreshBtn:hover { background-color: #142014; color: #60a060; }
-
-/* Week combo */
-#WeekCombo {
-    background-color: #161c28;
-    color: #c8a84b;
-    border: 1px solid #2a3020;
-    border-radius: 4px;
-    padding: 4px 10px;
+#LoginBtn {
+    background: rgba(225,6,0,0.12);
+    color: #E10600;
+    border: 1px solid rgba(225,6,0,0.3);
     font-weight: 600;
+}
+#LoginBtn:hover {
+    background: rgba(225,6,0,0.22);
+    color: #ff3020;
+    border-color: rgba(225,6,0,0.6);
+}
+#RefreshBtn {
+    background: rgba(0,217,255,0.06);
+    color: #00D9FF;
+    border: 1px solid rgba(0,217,255,0.2);
+}
+#RefreshBtn:hover {
+    background: rgba(0,217,255,0.12);
+    border-color: rgba(0,217,255,0.4);
+}
+
+/* ── WEEK COMBO ───────────────────────────────────────────────────── */
+#WeekCombo {
+    background: rgba(255,255,255,0.04);
+    color: #FF6B35;
+    border: 1px solid rgba(255,107,53,0.3);
+    border-radius: 5px;
+    padding: 4px 10px;
+    font-weight: 700;
     font-size: 12px;
 }
-#WeekCombo:disabled { color: #2a3040; }
+#WeekCombo:disabled { color: #1e2a3a; border-color: rgba(255,255,255,0.03); }
 QComboBox QAbstractItemView {
-    background-color: #0d1117;
-    color: #c9d1d9;
-    border: 1px solid #202c40;
-    selection-background-color: #1a2235;
+    background: #0f1525;
+    color: #94A3B8;
+    border: 1px solid rgba(225,6,0,0.2);
+    selection-background-color: rgba(225,6,0,0.15);
 }
 
-/* Tabs */
-QTabWidget::pane { border: none; }
-QTabBar { background-color: #080c12; }
+/* ── TABS ─────────────────────────────────────────────────────────── */
+QTabWidget::pane {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}
+QTabBar { background: transparent; }
 QTabBar::tab {
     background: transparent;
-    color: #3d5070;
-    padding: 9px 18px;
+    color: rgba(148,163,184,0.5);
+    padding: 10px 20px;
     border: none;
     border-bottom: 2px solid transparent;
     font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    min-width: 80px;
 }
-QTabBar::tab:selected { color: #c8a84b; border-bottom: 2px solid #c8a84b; }
-QTabBar::tab:hover:!selected { color: #6080a0; }
+QTabBar::tab:selected {
+    color: #FFFFFF;
+    border-bottom: 2px solid #E10600;
+    background: qlineargradient(x1:0,y1:0,x2:0,y2:1,
+        stop:0 rgba(225,6,0,0.08), stop:1 transparent);
+}
+QTabBar::tab:hover:!selected {
+    color: rgba(148,163,184,0.9);
+    border-bottom: 2px solid rgba(225,6,0,0.3);
+}
 
-/* Scroll */
-QScrollArea { background: #0d1117; border: none; }
-QScrollBar:vertical { background: #0d1117; width: 5px; }
-QScrollBar::handle:vertical { background: #1e2c40; border-radius: 2px; min-height: 30px; }
+/* ── SCROLL ───────────────────────────────────────────────────────── */
+QScrollArea { background: #0A0E1A; border: none; }
+QScrollBar:vertical {
+    background: transparent;
+    width: 4px;
+    margin: 0;
+}
+QScrollBar::handle:vertical {
+    background: rgba(225,6,0,0.3);
+    border-radius: 2px;
+    min-height: 30px;
+}
+QScrollBar::handle:vertical:hover { background: rgba(225,6,0,0.6); }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
 
-/* Row */
+/* ── ROW CARD ─────────────────────────────────────────────────────── */
 #DatapackRow {
-    background-color: #0d1117;
-    min-height: 200px;
-    max-height: 300px;
+    background: rgba(21,27,40,0.6);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    min-height: 240px;
 }
-#DatapackRow:hover { background-color: #0f1520; }
+#DatapackRow:hover {
+    background: rgba(225,6,0,0.04);
+    border-bottom: 1px solid rgba(225,6,0,0.15);
+}
 
-#RowSeparator { color: #141c28; }
+#RowSeparator {
+    background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+        stop:0 transparent,
+        stop:0.2 rgba(225,6,0,0.2),
+        stop:0.8 rgba(225,6,0,0.2),
+        stop:1 transparent);
+    border: none;
+    max-height: 1px;
+}
 
-#RowLeft { background-color: transparent; }
+/* ── LEFT PANEL ───────────────────────────────────────────────────── */
+#RowLeft { background: transparent; }
 
 #RowSeriesBadge {
-    color: #c8a84b;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    background-color: #1c1500;
+    color: #E10600;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    background: rgba(225,6,0,0.1);
+    border: 1px solid rgba(225,6,0,0.25);
     border-radius: 3px;
     padding: 2px 8px;
 }
-#RowCarName  { color: #e6edf3; font-size: 16px; font-weight: 600; }
-#RowTrackName { color: #6080a0; font-size: 13px; }
-#RowAuthor   { color: #3d5070; font-size: 11px; font-style: italic; }
-#RowLaptime  { color: #508060; font-size: 12px; font-family: "Consolas", monospace; }
-#RowWetBadge { color: #4090c0; font-size: 11px; font-weight: 600; }
-#RowWetSep   { color: #3d5070; font-size: 10px; font-style: italic; }
-
-/* Images */
-#RowTrackImg, #RowCarImg { background-color: #080c12; }
-
-/* Load btn */
-#RowLoadBtn {
-    background-color: #0d1520;
-    color: #3d5878;
-    border: 1px dashed #1a2838;
-    border-radius: 3px;
-    padding: 4px;
-    font-size: 11px;
+#RowCarName {
+    color: #FFFFFF;
+    font-size: 17px;
+    font-weight: 700;
 }
-#RowLoadBtn:hover { color: #5878a0; border-color: #2a3c58; }
+#RowTrackName {
+    color: #64748B;
+    font-size: 13px;
+}
+#RowAuthor {
+    color: #334155;
+    font-size: 11px;
+    font-style: italic;
+}
+#RowLaptime {
+    color: #00FF88;
+    font-size: 13px;
+    font-family: "Consolas", "JetBrains Mono", monospace;
+    font-weight: 600;
+}
+#RowWetBadge {
+    color: #00D9FF;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(0,217,255,0.08);
+    border: 1px solid rgba(0,217,255,0.2);
+    border-radius: 3px;
+    padding: 1px 6px;
+}
+#RowWetSep {
+    color: #00D9FF;
+    font-size: 10px;
+    font-style: italic;
+    letter-spacing: 2px;
+}
 
-/* File rows */
-#FileRow  { background: transparent; }
-#FileName { color: #7090a8; font-size: 12px; }
-#FileWet  { color: #4090c0; }
+/* ── IMAGES ───────────────────────────────────────────────────────── */
+#RowTrackImg, #RowCarImg {
+    background: rgba(255,255,255,0.02);
+    border-left: 1px solid rgba(255,255,255,0.04);
+}
+
+/* ── LOAD / TOGGLE BTN ────────────────────────────────────────────── */
+#RowLoadBtn {
+    background: rgba(225,6,0,0.12);
+    color: #E10600;
+    border: 1px solid rgba(225,6,0,0.4);
+    border-radius: 4px;
+    padding: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+#RowLoadBtn:hover {
+    background: rgba(225,6,0,0.22);
+    color: #ff3020;
+    border-color: rgba(225,6,0,0.7);
+}
+
+/* ── FILE ROWS ────────────────────────────────────────────────────── */
+#FileRow { background: transparent; }
+#FileName { color: #475569; font-size: 12px; }
+#FileWet  { color: #00D9FF; }
 
 #BtnDownload {
-    background-color: #081828;
-    color: #3868a8;
-    border: 1px solid #102038;
-    border-radius: 3px;
+    background: rgba(0,217,255,0.08);
+    color: #00D9FF;
+    border: 1px solid rgba(0,217,255,0.25);
+    border-radius: 4px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     padding: 2px;
 }
-#BtnDownload:hover { background-color: #0c2040; color: #5888c8; }
+#BtnDownload:hover {
+    background: rgba(0,217,255,0.18);
+    border-color: rgba(0,217,255,0.5);
+    color: #40eeff;
+}
 #BtnInstalled {
-    background-color: #081808;
-    color: #388060;
-    border: 1px solid #103020;
-    border-radius: 3px;
+    background: rgba(0,255,136,0.08);
+    color: #00FF88;
+    border: 1px solid rgba(0,255,136,0.25);
+    border-radius: 4px;
     font-size: 13px;
     padding: 2px;
 }
 
 QProgressBar#FileProgress {
-    background: #1a2030; border: none; border-radius: 2px;
+    background: rgba(255,255,255,0.05);
+    border: none;
+    border-radius: 2px;
 }
-QProgressBar#FileProgress::chunk { background: #3868a8; border-radius: 2px; }
+QProgressBar#FileProgress::chunk {
+    background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+        stop:0 #E10600, stop:1 #FF6B35);
+    border-radius: 2px;
+}
 
-#PlaceholderLabel { color: #1e2c40; font-size: 20px; letter-spacing: 2px; }
+/* ── PLACEHOLDER ──────────────────────────────────────────────────── */
+#PlaceholderLabel {
+    color: rgba(225,6,0,0.15);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 4px;
+}
     )";
 
     qApp->setStyleSheet(qss);
