@@ -58,7 +58,7 @@ void DatapackRow::loadImages()
     if (!m_trackFile.isEmpty()) {
         const QPixmap p = loadPic("track", m_trackFile);
         if (!p.isNull())
-            m_trackImg->setPixmap(p.scaled(420, 240, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+            m_trackImg->setPixmap(p.scaled(360, 240, Qt::KeepAspectRatio, Qt::SmoothTransformation));
         else
             m_trackImg->hide();
     } else {
@@ -159,7 +159,7 @@ void DatapackRow::buildUi(const Setup &summary)
     // ── CENTER: track image ──────────────────────────────────────────
     m_trackImg = new QLabel(this);
     m_trackImg->setObjectName("RowTrackImg");
-    m_trackImg->setFixedSize(420, 240);
+    m_trackImg->setFixedSize(360, 240);
     m_trackImg->setAlignment(Qt::AlignCenter);
     m_trackImg->setScaledContents(false);
     m_trackImg->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
