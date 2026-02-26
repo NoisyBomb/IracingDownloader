@@ -53,15 +53,20 @@ private:
 
     // Center: track image
     QLabel      *m_trackImg     = nullptr;
+    QString      m_trackFile;
 
     // Right: car image
     QLabel      *m_carImg       = nullptr;
+    QString      m_carFile;
+    bool         m_imagesLoaded = false;
 
     // Bottom: file buttons area (shown after Load)
     QWidget     *m_filesArea    = nullptr;
     QPushButton *m_loadBtn      = nullptr;
     bool         m_detailsLoaded = false;
 
+    void loadImages();
+    void showEvent(QShowEvent *event) override;
     // Laptime formatting
     static QString formatLaptime(float seconds);
 };

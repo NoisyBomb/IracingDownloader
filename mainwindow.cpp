@@ -2,6 +2,7 @@
 #include "trackregistry.h"
 
 #include <QApplication>
+#include <QShowEvent>
 #include <algorithm>
 #include <QScrollArea>
 #include <QVBoxLayout>
@@ -24,7 +25,6 @@ static QPixmap loadPic(const QString &subfolder, const QString &name)
         const QString path = QString("pic/%1/%2.%3").arg(subfolder, name, ext);
         if (QFile::exists(path))
             return QPixmap(path);
-        qDebug() << "[loadPic] cwd:" << QDir::currentPath() << "path:" << path;
     }
     return QPixmap();
 }
@@ -48,6 +48,23 @@ QString DatapackRow::formatLaptime(float seconds)
     const int mins = static_cast<int>(seconds) / 60;
     const float secs = seconds - mins * 60;
     return QString("%1:%2").arg(mins).arg(secs, 6, 'f', 3, '0');
+}
+
+void DatapackRow::loadImages()
+{
+    if (m_imagesLoaded) return;
+    m_imagesLoaded = true;
+
+    if (!m_trackFile.isEmpty()) {
+        const QPixmap p = loadPic("track", m_trackFile);
+        if (!p.isNull())
+            m_trackImg->setPixmap(p.scaled(380, 210, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    }
+    if (!m_carFile.isEmpty()) {
+        const QPixmap p = loadPic("car", m_carFile);
+        if (!p.isNull())
+            m_carImg->setPixmap(p.scaled(380, 210, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    }
 }
 
 DatapackRow::DatapackRow(const Setup &summary, QWidget *parent)
@@ -130,29 +147,30 @@ void DatapackRow::buildUi(const Setup &summary)
     // ── CENTER: track image ──────────────────────────────────────────
     m_trackImg = new QLabel(this);
     m_trackImg->setObjectName("RowTrackImg");
-    m_trackImg->setFixedSize(380, 214);
+    m_trackImg->setFixedSize(380, 210);
     m_trackImg->setAlignment(Qt::AlignCenter);
     m_trackImg->setScaledContents(false);
 
-    const QString trackFile = TrackRegistry::instance().imageFile(summary.track.displayName);
-    const QPixmap trackPix = loadPic("track", trackFile);
-    if (!trackPix.isNull())
-        m_trackImg->setPixmap(trackPix.scaled(380, 214, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    // Images loaded lazily via loadImages()
+    m_trackFile = TrackRegistry::instance().imageFile(summary.track.displayName);
+    m_carFile   = sanitizeCarName(summary.car.displayName);
 
     // ── RIGHT: car image ─────────────────────────────────────────────
     m_carImg = new QLabel(this);
     m_carImg->setObjectName("RowCarImg");
-    m_carImg->setFixedSize(380, 214);
+    m_carImg->setFixedSize(380, 210);
     m_carImg->setAlignment(Qt::AlignCenter);
     m_carImg->setScaledContents(false);
-
-    const QPixmap carPix = loadPic("car", sanitizeCarName(summary.car.displayName));
-    if (!carPix.isNull())
-        m_carImg->setPixmap(carPix.scaled(380, 214, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
     outer->addWidget(leftPanel);
     outer->addWidget(m_trackImg, 1);
     outer->addWidget(m_carImg, 1);
+}
+
+void DatapackRow::showEvent(QShowEvent *event)
+{
+    QWidget::showEvent(event);
+    loadImages();
 }
 
 void DatapackRow::setDetails(const QList<Setup> &setups)

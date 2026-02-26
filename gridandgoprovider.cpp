@@ -79,7 +79,14 @@ QList<Setup> GridAndGoProvider::parseDatapackList(const QByteArray& json) const
         const float   laptime   = static_cast<float>(obj["laptime"].toDouble());
         const bool    wet       = obj["wet"].toBool();
 
+        // Исключаем ненужные серии
+        static const QSet<QString> excludedSeries = {
+            "Bathurst12", "Daytona24", "FIXED", "OPENWHEEL-FIXED",
+            "RingMeister", "Roar", "THE-PCC"
+        };
         if (id.isEmpty() || carId.isEmpty() || trackName.isEmpty())
+            continue;
+        if (excludedSeries.contains(series))
             continue;
 
         const QString folderName = CarRegistry::instance().folderName(carId, carName);
