@@ -130,25 +130,25 @@ void DatapackRow::buildUi(const Setup &summary)
     // ── CENTER: track image ──────────────────────────────────────────
     m_trackImg = new QLabel(this);
     m_trackImg->setObjectName("RowTrackImg");
-    m_trackImg->setFixedSize(380, 210);
+    m_trackImg->setFixedSize(380, 214);
     m_trackImg->setAlignment(Qt::AlignCenter);
     m_trackImg->setScaledContents(false);
 
     const QString trackFile = TrackRegistry::instance().imageFile(summary.track.displayName);
     const QPixmap trackPix = loadPic("track", trackFile);
     if (!trackPix.isNull())
-        m_trackImg->setPixmap(trackPix.scaled(380, 210, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        m_trackImg->setPixmap(trackPix.scaled(380, 214, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
     // ── RIGHT: car image ─────────────────────────────────────────────
     m_carImg = new QLabel(this);
     m_carImg->setObjectName("RowCarImg");
-    m_carImg->setFixedSize(380, 210);
+    m_carImg->setFixedSize(380, 214);
     m_carImg->setAlignment(Qt::AlignCenter);
     m_carImg->setScaledContents(false);
 
     const QPixmap carPix = loadPic("car", sanitizeCarName(summary.car.displayName));
     if (!carPix.isNull())
-        m_carImg->setPixmap(carPix.scaled(380, 210, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        m_carImg->setPixmap(carPix.scaled(380, 214, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 
     outer->addWidget(leftPanel);
     outer->addWidget(m_trackImg, 1);
