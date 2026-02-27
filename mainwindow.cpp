@@ -13,9 +13,6 @@
 #include <QSet>
 #include <QDebug>
 
-// ══════════════════════════════════════════════════════════════════════════════
-// Helpers
-// ══════════════════════════════════════════════════════════════════════════════
 
 static QPixmap loadPic(const QString &subfolder, const QString &name)
 {
@@ -37,10 +34,6 @@ static QString sanitizeCarName(const QString &s)
     r.remove(re);
     return r;
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// DatapackRow
-// ══════════════════════════════════════════════════════════════════════════════
 
 QString DatapackRow::formatLaptime(float seconds)
 {
@@ -86,13 +79,11 @@ DatapackRow::DatapackRow(const Setup &summary, QWidget *parent)
 
 void DatapackRow::buildUi(const Setup &summary)
 {
-    // ── Outer layout: left info | center track img | right car img ──
     auto *outer = new QHBoxLayout(this);
     outer->setContentsMargins(16, 12, 16, 12);
     outer->setSpacing(32);
     outer->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
-    // ── LEFT PANEL ──────────────────────────────────────────────────
     auto *leftPanel = new QWidget(this);
     leftPanel->setObjectName("RowLeft");
     leftPanel->setFixedWidth(320);
@@ -119,19 +110,16 @@ void DatapackRow::buildUi(const Setup &summary)
     m_authorLabel = new QLabel("by " + summary.author, leftPanel);
     m_authorLabel->setObjectName("RowAuthor");
 
-    // Laptime
     const QString lt = formatLaptime(summary.laptime);
     m_laptimeLabel = new QLabel(lt.isEmpty() ? "" : "⏱  " + lt, leftPanel);
     m_laptimeLabel->setObjectName("RowLaptime");
 
-    // Wet badge
     if (summary.wet) {
         auto *wetLabel = new QLabel("🌧  WET", leftPanel);
         wetLabel->setObjectName("RowWetBadge");
         leftLayout->addWidget(wetLabel);
     }
 
-    // Files area (expands after Load)
     m_filesArea = new QWidget(leftPanel);
     m_filesArea->setLayout(new QVBoxLayout());
     m_filesArea->layout()->setContentsMargins(0, 4, 0, 0);
@@ -156,7 +144,6 @@ void DatapackRow::buildUi(const Setup &summary)
     leftLayout->addWidget(m_filesArea);
     leftLayout->addWidget(m_loadBtn);
 
-    // ── CENTER: track image ──────────────────────────────────────────
     m_trackImg = new QLabel(this);
     m_trackImg->setObjectName("RowTrackImg");
     m_trackImg->setFixedSize(420, 200);
@@ -165,11 +152,9 @@ void DatapackRow::buildUi(const Setup &summary)
     m_trackImg->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     m_trackImg->setMaximumHeight(200);
 
-    // Images loaded lazily via loadImages()
     m_trackFile = TrackRegistry::instance().imageFile(summary.track.displayName);
     m_carFile   = sanitizeCarName(summary.car.displayName);
 
-    // ── RIGHT: car image ─────────────────────────────────────────────
     m_carImg = new QLabel(this);
     m_carImg->setObjectName("RowCarImg");
     m_carImg->setFixedSize(420, 200);
@@ -195,7 +180,6 @@ void DatapackRow::setDetails(const QList<Setup> &setups)
     if (m_detailsLoaded) return;
     m_detailsLoaded = true;
 
-    // Group: dry setups + wet setups together
     QList<Setup> dry, wet;
     for (const Setup &s : setups) {
         if (s.wet) wet << s;
@@ -210,7 +194,6 @@ void DatapackRow::setDetails(const QList<Setup> &setups)
         buildFileButtons(wet);
     }
 
-    // Turn load button into collapse/expand toggle
     m_loadBtn->setText("▲  Hide setups");
     m_loadBtn->setEnabled(true);
     disconnect(m_loadBtn, nullptr, nullptr, nullptr);
@@ -270,7 +253,6 @@ void DatapackRow::buildFileButtons(const QList<Setup> &setups)
     }
 }
 
-// ── State helpers ──────────────────────────────────────────────────────────
 
 template<typename T>
 static T *findBySetupId(QWidget *root, const QString &id)
@@ -312,9 +294,6 @@ void DatapackRow::setFailed(const Setup &setup, const QString &)
         pb->hide();
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// MainWindow
-// ══════════════════════════════════════════════════════════════════════════════
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -344,7 +323,6 @@ void MainWindow::setupUi()
     root->setContentsMargins(0, 0, 0, 0);
     root->setSpacing(0);
 
-    // ── Top bar ──────────────────────────────────────────────────────
     m_topBar = new QWidget(central);
     m_topBar->setObjectName("TopBar");
     m_topBar->setFixedHeight(52);
@@ -382,7 +360,6 @@ void MainWindow::setupUi()
     tl->addWidget(m_refreshBtn);
     tl->addWidget(m_loginBtn);
 
-    // ── Tabs ─────────────────────────────────────────────────────────
     m_tabs = new QTabWidget(central);
     m_tabs->setObjectName("MainTabs");
     m_tabs->setDocumentMode(true);
@@ -398,8 +375,6 @@ void MainWindow::setupUi()
     connect(m_loginBtn,   &QPushButton::clicked, this, &MainWindow::onLoginClicked);
     connect(m_refreshBtn, &QPushButton::clicked, this, &MainWindow::onRefreshClicked);
 }
-
-// ── Auth ───────────────────────────────────────────────────────────────────
 
 void MainWindow::onLoginClicked()
 {
@@ -443,8 +418,6 @@ void MainWindow::onLoginFailed(const QString &reason)
     m_loginBtn->setEnabled(true);
     QMessageBox::warning(this, "Login failed", reason);
 }
-
-// ── Data ───────────────────────────────────────────────────────────────────
 
 void MainWindow::onRefreshClicked()
 {
@@ -490,8 +463,6 @@ void MainWindow::downloadAndInstall(const Setup &setup)
 {
     m_manager->downloadAndInstall(setup);
 }
-
-// ── Tabs ───────────────────────────────────────────────────────────────────
 
 void MainWindow::clearTabs()
 {
@@ -587,7 +558,6 @@ void MainWindow::applyWeekFilter(int week)
     }
 }
 
-// ── Style ──────────────────────────────────────────────────────────────────
 
 void MainWindow::applyStyleSheet()
 {

@@ -9,10 +9,7 @@
 
 struct Setup
 {
-    // Unique id of this individual .sto file
     QString  id;
-
-    // Id of the parent datapack (one datapack may have multiple .sto files)
     QString  datapackId;
 
     QString  displayName;

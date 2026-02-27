@@ -46,7 +46,6 @@ QString CarRegistry::folderName(const QString &carId, const QString &fallbackDis
     if (m_cars.contains(carId))
         return m_cars[carId].folderName;
 
-    // Fallback: sanitize displayName → lowercase, spaces to underscore, strip special chars
     qWarning() << "CarRegistry: unknown carId" << carId << "- using fallback";
 
     QString name = fallbackDisplayName.isEmpty() ? carId : fallbackDisplayName;

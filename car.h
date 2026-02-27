@@ -9,7 +9,6 @@ struct Car
     QString displayName;
     QString folderName;
 
-    // Convenience constructor
     Car() = default;
     Car(const QString& id,
         const QString& displayName,

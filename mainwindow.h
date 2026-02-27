@@ -11,14 +11,10 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFrame>
-
 #include "setup.h"
 #include "setupmanager.h"
 #include "iracingweek.h"
 
-// ══════════════════════════════════════════════════════════════════════════════
-// DatapackRow  — одна горизонтальная строка (датапак = машина + трек)
-// ══════════════════════════════════════════════════════════════════════════════
 
 class DatapackRow : public QWidget
 {
@@ -44,36 +40,27 @@ private:
 
     QString      m_datapackId;
 
-    // Left panel
     QLabel      *m_seriesLabel  = nullptr;
     QLabel      *m_carLabel     = nullptr;
     QLabel      *m_trackLabel   = nullptr;
     QLabel      *m_authorLabel  = nullptr;
     QLabel      *m_laptimeLabel = nullptr;
 
-    // Center: track image
     QLabel      *m_trackImg     = nullptr;
     QString      m_trackFile;
 
-    // Right: car image
     QLabel      *m_carImg       = nullptr;
     QString      m_carFile;
     bool         m_imagesLoaded = false;
 
-    // Bottom: file buttons area (shown after Load)
     QWidget     *m_filesArea    = nullptr;
     QPushButton *m_loadBtn      = nullptr;
     bool         m_detailsLoaded = false;
 
     void loadImages();
     void showEvent(QShowEvent *event) override;
-    // Laptime formatting
     static QString formatLaptime(float seconds);
 };
-
-// ══════════════════════════════════════════════════════════════════════════════
-// MainWindow
-// ══════════════════════════════════════════════════════════════════════════════
 
 class QScrollArea;
 class QComboBox;

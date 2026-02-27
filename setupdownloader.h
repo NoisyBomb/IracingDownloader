@@ -16,12 +16,7 @@ class SetupDownloader : public QObject
 
 public:
     explicit SetupDownloader(QObject* parent = nullptr);
-
-    // Скачать файл сетапа. Сохраняет во временную папку,
-    // затем эмитит downloadFinished с путём к файлу.
     void download(const Setup& setup);
-
-    // Отменить текущую загрузку
     void cancel();
 
 signals:

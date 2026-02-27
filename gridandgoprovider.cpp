@@ -22,8 +22,6 @@ void GridAndGoProvider::setAccessToken(const QString& token)
     m_token = token;
 }
 
-// ── Шаг 1: список датапаков ───────────────────────────────────────────────────
-
 void GridAndGoProvider::fetchDatapackList(int year, int season)
 {
     QUrl url(QString("%1/datapacks").arg(BASE_URL));
@@ -59,7 +57,6 @@ void GridAndGoProvider::onListReplyFinished(QNetworkReply* reply)
 
 QList<Setup> GridAndGoProvider::parseDatapackList(const QByteArray& json) const
 {
-    // API returns { "items": [...] }
     const QJsonDocument doc = QJsonDocument::fromJson(json);
     const QJsonArray arr = doc.object().value("items").toArray();
 
@@ -79,7 +76,6 @@ QList<Setup> GridAndGoProvider::parseDatapackList(const QByteArray& json) const
         const float   laptime   = static_cast<float>(obj["laptime"].toDouble());
         const bool    wet       = obj["wet"].toBool();
 
-        // Исключаем ненужные серии
         static const QSet<QString> excludedSeries = {
             "Bathurst12", "Daytona24", "FIXED", "OPENWHEEL-FIXED",
             "RingMeister", "Roar", "THE-PCC"
@@ -95,7 +91,7 @@ QList<Setup> GridAndGoProvider::parseDatapackList(const QByteArray& json) const
 
         Setup s;
         s.id          = id;
-        s.datapackId  = id;   // на уровне списка id == datapackId
+        s.datapackId  = id;
         s.displayName = carName + " @ " + trackName;
         s.author      = author;
         s.provider    = "GnG";
@@ -105,15 +101,12 @@ QList<Setup> GridAndGoProvider::parseDatapackList(const QByteArray& json) const
         s.wet         = wet;
         s.car         = car;
         s.track       = track;
-        // downloadUrl и fileName появятся после fetchDatapackDetails()
 
         result.append(s);
     }
 
     return result;
 }
-
-// ── Шаг 2: детали датапака → setupLinks ───────────────────────────────────────
 
 void GridAndGoProvider::fetchDatapackDetails(const QString& datapackId)
 {
@@ -199,7 +192,6 @@ std::pair<QString, QList<Setup>> GridAndGoProvider::parseDatapackDetails(const Q
     return { datapackId, result };
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 QNetworkRequest GridAndGoProvider::makeRequest(const QUrl& url, bool withAuth) const
 {

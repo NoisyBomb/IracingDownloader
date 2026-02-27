@@ -71,11 +71,9 @@ void AuthManager::onPageLoaded(bool ok)
 
     const QString url = m_webView->url().toString();
 
-    // Только на странице логина Cognito
     if (!url.contains("amazoncognito.com/login"))
         return;
 
-    // JS: заполняем поля и сабмитим форму
     const QString js = QString(R"(
         (function() {
             var emailField    = document.getElementById('signInFormUsername');
@@ -98,7 +96,6 @@ void AuthManager::onPageLoaded(bool ok)
         })()
     )").arg(QString(HARDCODED_USERNAME), QString(HARDCODED_PASSWORD));
 
-    // Небольшая задержка чтобы страница полностью отрисовалась
     QTimer::singleShot(800, this, [this, js]() {
         m_webView->page()->runJavaScript(js, [](const QVariant &result) {
             qInfo() << "[AuthManager] Autofill result:" << result.toString();

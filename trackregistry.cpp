@@ -34,8 +34,6 @@ QString TrackRegistry::imageFile(const QString &trackName) const
 {
     if (m_tracks.contains(trackName))
         return m_tracks[trackName];
-
-    // Fallback: sanitize
     static const QRegularExpression re("[^a-z0-9_]");
     QString s = trackName.toLower();
     s.replace(' ', '_');

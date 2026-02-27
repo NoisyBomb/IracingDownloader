@@ -1,4 +1,5 @@
 #include "setupmanager.h"
+#include "iracingweek.h"
 
 #include "authmanager.h"
 #include "gridandgoprovider.h"
@@ -17,7 +18,6 @@ SetupManager::SetupManager(QObject* parent)
     , m_downloader(new SetupDownloader(this))
     , m_installer (new SetupInstaller(*m_resolver, this))
 {
-    // ── Авторизация ───────────────────────────────────
     connect(m_auth, &AuthManager::loginSucceeded,
             this,   &SetupManager::onLoginSucceeded);
     connect(m_auth, &AuthManager::loginFailed,
@@ -25,7 +25,6 @@ SetupManager::SetupManager(QObject* parent)
     connect(m_auth, &AuthManager::loggedOut,
             this,   &SetupManager::loggedOut);
 
-    // ── Провайдер ─────────────────────────────────────
     connect(m_provider, &GridAndGoProvider::datapackListReady,
             this,        &SetupManager::onDatapackListReady);
     connect(m_provider, &GridAndGoProvider::datapackDetailsReady,
@@ -33,7 +32,6 @@ SetupManager::SetupManager(QObject* parent)
     connect(m_provider, &GridAndGoProvider::fetchFailed,
             this,        &SetupManager::errorOccurred);
 
-    // ── Загрузчик ─────────────────────────────────────
     connect(m_downloader, &SetupDownloader::downloadFinished,
             this,          &SetupManager::onDownloadFinished);
     connect(m_downloader, &SetupDownloader::downloadFailed,
@@ -41,14 +39,11 @@ SetupManager::SetupManager(QObject* parent)
     connect(m_downloader, &SetupDownloader::downloadProgress,
             this,          &SetupManager::onDownloadProgress);
 
-    // ── Установщик ────────────────────────────────────
     connect(m_installer, &SetupInstaller::installed,
             this,         &SetupManager::installSucceeded);
     connect(m_installer, &SetupInstaller::installFailed,
             this,         &SetupManager::installFailed);
 }
-
-// ── Авторизация ───────────────────────────────────────────────────────────────
 
 void SetupManager::login()
 {
@@ -80,11 +75,12 @@ void SetupManager::onLoginFailed(const QString& reason)
     emit loginFailed(reason);
 }
 
-// ── Данные ────────────────────────────────────────────────────────────────────
-
 void SetupManager::refreshDatapackList(int year, int season)
 {
-    m_provider->fetchDatapackList(year, season);
+    const IracingWeek cur = IracingWeek::current();
+    const int y = (year   > 0) ? year   : cur.year;
+    const int s = (season > 0) ? season : cur.season;
+    m_provider->fetchDatapackList(y, s);
 }
 
 void SetupManager::onDatapackListReady(const QList<Setup>& setups)
@@ -104,8 +100,6 @@ void SetupManager::onDatapackDetailsReady(const QString& datapackId, const QList
     qInfo() << "[SetupManager] Детали датапака загружены, файлов:" << setups.size();
     emit datapackDetailsLoaded(datapackId, setups);
 }
-
-// ── Скачивание и установка ────────────────────────────────────────────────────
 
 void SetupManager::downloadAndInstall(const Setup& setup)
 {
@@ -129,8 +123,6 @@ void SetupManager::onDownloadProgress(const Setup& setup, qint64 received, qint6
 {
     emit downloadProgress(setup, received, total);
 }
-
-// ── Утилиты ───────────────────────────────────────────────────────────────────
 
 bool SetupManager::uninstall(const Setup& setup)
 {

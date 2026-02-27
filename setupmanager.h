@@ -19,43 +19,33 @@ class SetupManager : public QObject
 public:
     explicit SetupManager(QObject* parent = nullptr);
 
-    // ── Авторизация ───────────────────────────────────
     void login();
     void logout();
     bool isLoggedIn() const;
 
-    // ── Данные ────────────────────────────────────────
-    void refreshDatapackList(int year = 2026, int season = 1);
+    void refreshDatapackList(int year = 0, int season = 0);
     const QList<Setup>& setups() const { return m_setups; }
 
-    // Загрузить детали датапака (setupLinks)
     void loadDatapackDetails(const QString& datapackId);
 
-    // Скачать и установить конкретный сетап
     void downloadAndInstall(const Setup& setup);
 
-    // Удалить / проверить
     bool uninstall(const Setup& setup);
     bool isInstalled(const Setup& setup) const;
 
 signals:
-    // Авторизация
     void loginSucceeded();
     void loginFailed(const QString& reason);
     void loggedOut();
 
-    // Список
     void setupListUpdated(const QList<Setup>& setups);
 
-    // Детали датапака (datapackId нужен MainWindow чтобы найти нужную карточку)
     void datapackDetailsLoaded(const QString& datapackId, const QList<Setup>& setups);
 
-    // Загрузка и установка
     void downloadProgress(const Setup& setup, qint64 received, qint64 total);
     void installSucceeded(const Setup& setup, const QString& path);
     void installFailed(const Setup& setup, const QString& reason);
 
-    // Общие ошибки
     void errorOccurred(const QString& reason);
 
 private slots:
