@@ -55,6 +55,6 @@ private:
         "&client_id=1nqqluo9th1iajur09j2amd63p"
         "&redirect_uri=https://app.grid-and-go.com";
 
-    static constexpr const char* HARDCODED_USERNAME = "igorvrabie12@gmail.com";
-    static constexpr const char* HARDCODED_PASSWORD = "EgorPadpiska112@";
+    static constexpr const char* HARDCODED_USERNAME = "******";
+    static constexpr const char* HARDCODED_PASSWORD = "******";
 };
