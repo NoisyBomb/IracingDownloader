@@ -81,7 +81,7 @@ void SetupDownloader::onFinished()
     const QNetworkReply::NetworkError error = m_reply->error();
 
     if (error != QNetworkReply::NoError) {
-        // Проверяем — не истёкла ли S3 ссылка (HTTP 403)
+        // Проверяем — не истекла ли S3 ссылка (HTTP 403)
         const int httpStatus = m_reply->attribute(
                                           QNetworkRequest::HttpStatusCodeAttribute).toInt();
 
