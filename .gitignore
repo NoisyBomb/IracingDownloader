@@ -1,0 +1,16 @@
+# Build folders
+build/
+dist/
+
+# Qt generated
+*.pro.user
+*.pro.user.*
+
+# Credentials - never commit
+credentials.h
+
+# Images folder
+pic/
+
+.DS_Store
+Thumbs.db

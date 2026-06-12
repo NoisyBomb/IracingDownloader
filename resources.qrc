@@ -1,6 +1,0 @@
-<RCC>
-    <qresource prefix="/data">
-        <file>cars.json</file>
-        <file>tracks.json</file>
-    </qresource>
-</RCC>

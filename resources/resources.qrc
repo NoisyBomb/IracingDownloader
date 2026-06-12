@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/data">
+        <file alias="cars.json">../registry/cars.json</file>
+        <file alias="tracks.json">../registry/tracks.json</file>
+    </qresource>
+</RCC>
