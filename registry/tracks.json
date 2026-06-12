@@ -36,7 +36,7 @@
         { "trackName": "MotorLand Aragón",                           "imageFile": "motorland_aragon_grand_prix" },
         { "trackName": "Motorsport Arena Oschersleben",              "imageFile": "motorsport_arena_oschersleben" },
         { "trackName": "Mount Panorama Circuit",                     "imageFile": "mount_panorama" },
-        { "trackName": "Nürburgring Combined",                       "imageFile": "nurburgrin_wec" },
+        { "trackName": "Nürburgring Combined",                       "imageFile": "nurburgring_wec" },
         { "trackName": "Nürburgring Grand-Prix-Strecke",             "imageFile": "nurburgring_gp" },
         { "trackName": "Nürburgring Nordschleife",                   "imageFile": "nurburgring_nordschleife" },
         { "trackName": "Okayama International Circuit",              "imageFile": "okayama_international_circuit" },
@@ -63,6 +63,10 @@
         { "trackName": "Watkins Glen International",                 "imageFile": "watkins_glen_classic_cup" },
         { "trackName": "WeatherTech Raceway at Laguna Seca",         "imageFile": "laguna_seca_full_course" },
         { "trackName": "Willow Springs International Raceway",       "imageFile": "willow_springs" },
-        { "trackName": "Winton Motor Raceway",                       "imageFile": "winton_motor_raceway" }
+        { "trackName": "Winton Motor Raceway",                       "imageFile": "winton_motor_raceway" },
+        { "trackName": "St. Petersburg Grand Prix",                  "imageFile": "st_petersburg_grand_prix"},
+        { "trackName": "Thruxton Circuit",                           "imageFile": "thruxton_circuit"},
+        { "trackName": "Detroit Grand Prix at Belle Isle",           "imageFile": "detroit_gp"},
+        { "trackName": "Mid-Ohio Sports Car Course",                 "imageFile": "mid_ohio"}
     ]
 }

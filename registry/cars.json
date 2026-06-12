@@ -219,6 +219,51 @@
       "carId": "g61-c-194",
       "displayName": "Porsche 911 Cup (992.2)",
       "folderName": "porsche9922cup"
+    },
+    {
+      "carId": "g61-c-59",
+      "displayName": "Audi 90 GTO",
+      "folderName": "audi_90_gto"
+    },
+    {
+      "carId": "g61-c-74",
+      "displayName": "Ford GT GT2",
+      "folderName": "ford_gt_gt2"
+    },
+    {
+      "carId": "g61-c-43",
+      "displayName": "Aston Martin DBR9 GT1",
+      "folderName": "aston_martin_dbr9_gt1"
+    },
+    {
+      "carId": "g61-c-58",
+      "displayName": "Chevrolet Corvette C6.R GT1",
+      "folderName": "chevrolet_corvette_c6r_gt1"
+    },
+    {
+      "carId": "g61-c-56",
+      "displayName": "Ford GTE",
+      "folderName": "ford_gte"
+    },
+    {
+      "carId": "g61-c-22",
+      "displayName": "HPD ARX-01c",
+      "folderName": "hpd_arx01c"
+    },
+    {
+      "carId": "g61-c-27",
+      "displayName": "Nissan GTP ZX-T",
+      "folderName": "nissan_gtp_zxt"
+    },
+    {
+      "carId": "g61-c-146",
+      "displayName": "Renault Clio",
+      "folderName": "renault_clio"
+    },
+    {
+      "carId": "g61-c-176",
+      "displayName": "Supercars Ford Mustang Gen 3",
+      "folderName": "ford_mustang_gen3"
     }
   ]
 }
