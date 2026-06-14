@@ -16,9 +16,9 @@
       "folderName": "mx5 mx52016"
     },
     {
-      "carId": "g61-c-9",
-      "displayName": "Audi RS 3 LMS TCR",
-      "folderName": "audirs3lms"
+      "carId": "g61-c-195",
+      "displayName": "Audi RS3 LMS Gen2 TCR",
+      "folderName": "audi_rs_3_lms_tcr"
     },
     {
       "carId": "g61-c-28",
@@ -264,6 +264,11 @@
       "carId": "g61-c-176",
       "displayName": "Supercars Ford Mustang Gen 3",
       "folderName": "ford_mustang_gen3"
+    },
+    {
+      "carId": "g61-c-2",
+      "displayName": "Dallara F3",
+      "folderName": "dallaraf3"
     }
   ]
 }

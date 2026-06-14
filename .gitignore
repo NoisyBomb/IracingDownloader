@@ -10,7 +10,6 @@ dist/
 credentials.h
 
 # Images folder
-pic/
 
 .DS_Store
 Thumbs.db
