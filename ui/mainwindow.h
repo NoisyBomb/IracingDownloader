@@ -11,9 +11,9 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFrame>
-#include "setup.h"
-#include "setupmanager.h"
-#include "iracingweek.h"
+#include "models/setup.h"
+#include "core/setupmanager.h"
+#include "models/iracingweek.h"
 
 
 class DatapackRow : public QWidget

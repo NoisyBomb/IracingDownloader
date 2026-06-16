@@ -17,7 +17,7 @@ struct IracingWeek
     static IracingWeek current()
     {
         static const QDateTime anchor =
-            QDateTime(QDate(2025, 12, 16), QTime(0, 0, 0), QTimeZone::utc());
+            QDateTime(QDate(2025, 12, 14), QTime(0, 0, 0), QTimeZone::utc());
 
         const QDateTime now = QDateTime::currentDateTimeUtc();
         const qint64 daysSince = anchor.daysTo(now);
@@ -40,7 +40,7 @@ struct IracingWeek
     static QDateTime startOf(int year, int season, int week)
     {
         static const QDateTime anchor =
-            QDateTime(QDate(2025, 12, 16), QTime(0, 0, 0), QTimeZone::utc());
+            QDateTime(QDate(2025, 12, 14), QTime(0, 0, 0), QTimeZone::utc());
 
         const int seasonOffset = (year - 2026) * 4 + (season - 1);
         const int weekOffset   = seasonOffset * 13 + (week - 1);

@@ -6,7 +6,7 @@
         },
         {
             "trackName": "Algarve International Circuit",
-            "imageFile": "algarve_grand_prix"
+            "imageFile": "algavre_grand_prix"
         },
         {
             "trackName": "Autodromo Internazionale Enzo e Dino Ferrari",
@@ -62,7 +62,7 @@
         },
         {
             "trackName": "Circuit de Lédenon",
-            "imageFile": "circuit_de_jedenon"
+            "imageFile": "circuit_de_ledenon"
         },
         {
             "trackName": "Circuit de Nevers Magny-Cours",
@@ -154,11 +154,11 @@
         },
         {
             "trackName": "Nürburgring Combined",
-            "imageFile": "nurburgring_wec"
+            "imageFile": "nurburgring_combined"
         },
         {
             "trackName": "Nürburgring Grand-Prix-Strecke",
-            "imageFile": "nurburgring_gp"
+            "imageFile": "nurburgring_wec"
         },
         {
             "trackName": "Nürburgring Nordschleife",
@@ -210,7 +210,7 @@
         },
         {
             "trackName": "Sachsenring",
-            "imageFile": "sachsring"
+            "imageFile": "sachesring"
         },
         {
             "trackName": "Sandown International Motor Raceway",

@@ -18,7 +18,7 @@
     {
       "carId": "g61-c-195",
       "displayName": "Audi RS3 LMS Gen2 TCR",
-      "folderName": "audi_rs_3_lms_tcr"
+      "folderName": "audirs3lmsgen2"
     },
     {
       "carId": "g61-c-28",
@@ -48,7 +48,7 @@
     {
       "carId": "g61-c-51",
       "displayName": "Ford Mustang FR500S",
-      "folderName": "fordmustanggt3"
+      "folderName": "fr500s"
     },
     {
       "carId": "g61-c-80",
@@ -223,52 +223,57 @@
     {
       "carId": "g61-c-59",
       "displayName": "Audi 90 GTO",
-      "folderName": "audi_90_gto"
+      "folderName": "audi90gto"
     },
     {
       "carId": "g61-c-74",
       "displayName": "Ford GT GT2",
-      "folderName": "ford_gt_gt2"
+      "folderName": "fordgt"
     },
     {
       "carId": "g61-c-43",
       "displayName": "Aston Martin DBR9 GT1",
-      "folderName": "aston_martin_dbr9_gt1"
+      "folderName": "astonmartin dbr9"
     },
     {
       "carId": "g61-c-58",
       "displayName": "Chevrolet Corvette C6.R GT1",
-      "folderName": "chevrolet_corvette_c6r_gt1"
+      "folderName": "c6r"
     },
     {
       "carId": "g61-c-56",
       "displayName": "Ford GTE",
-      "folderName": "ford_gte"
+      "folderName": "fordgt2017"
     },
     {
       "carId": "g61-c-22",
       "displayName": "HPD ARX-01c",
-      "folderName": "hpd_arx01c"
+      "folderName": "hpdarx01c"
     },
     {
       "carId": "g61-c-27",
       "displayName": "Nissan GTP ZX-T",
-      "folderName": "nissan_gtp_zxt"
+      "folderName": "nissangtpzxt"
     },
     {
       "carId": "g61-c-146",
       "displayName": "Renault Clio",
-      "folderName": "renault_clio"
+      "folderName": "renaultcliocup"
     },
     {
       "carId": "g61-c-176",
       "displayName": "Supercars Ford Mustang Gen 3",
-      "folderName": "ford_mustang_gen3"
+      "folderName": "supercars fordmustanggen3"
     },
     {
       "carId": "g61-c-2",
       "displayName": "Dallara F3",
       "folderName": "dallaraf3"
+    },
+    {
+      "carId": "g61-c-200",
+      "displayName": "BMW M2 Racing (G87)",
+      "folderName": "bmwm2g87"
     }
   ]
 }

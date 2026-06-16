@@ -57,8 +57,8 @@ void AuthManager::startLogin()
                 this,       &AuthManager::onUrlChanged);
 
         // AUTO-LOGIN DISABLED
-        // connect(m_webView, &QWebEngineView::loadFinished,
-        //         this, &AuthManager::onPageLoaded);
+        //connect(m_webView, &QWebEngineView::loadFinished,
+                 //this, &AuthManager::onPageLoaded);
     }
 
     m_webView->load(url);
@@ -72,7 +72,6 @@ void AuthManager::onPageLoaded(bool ok)
 
     const QString url = m_webView->url().toString();
 
-    // Только на странице логина Cognito
     if (!url.contains("amazoncognito.com/login"))
         return;
 
