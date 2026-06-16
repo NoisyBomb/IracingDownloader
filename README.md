@@ -41,7 +41,9 @@
    <img width="2560" height="1590" alt="Список серий" src="https://github.com/user-attachments/assets/547ab027-d598-43db-b505-fd94605b5bad" />
 6. Используйте клавишу **Week** для фильтрации по неделе
    
-    <img width="272" height="776" alt="Week тулбар для фильтрации" src="https://github.com/user-attachments/assets/07cfeedb-e08d-463e-a269-3c7d8c662445" />
+    <p align="center">
+       <img width="272" height="776" alt="Week тулбар для фильтрации" src="https://github.com/user-attachments/assets/07cfeedb-e08d-463e-a269-3c7d8c662445" />
+    </p>
 7. Нажмите **Load setups** на интересующем датапаке
     <img width="2560" height="470" alt="Клавиша для показа сетапов" src="https://github.com/user-attachments/assets/2d1e2359-82d2-41e3-8719-126c55426ae7" />
 8. Нажмите **↓** рядом с нужным сетапом
