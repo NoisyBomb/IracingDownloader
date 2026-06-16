@@ -33,21 +33,22 @@
 
 1. Запустите **IracingDownloader.exe**
 2. Нажмите **Login** в правом верхнем углу
-   <img width="882" height="114" alt="1" src="https://github.com/user-attachments/assets/34d6380b-4182-4ace-abb6-8d72c24d4b52" />
+   <img width="882" height="114" alt="Логин" src="https://github.com/user-attachments/assets/34d6380b-4182-4ace-abb6-8d72c24d4b52" />
 3. В открывшемся окне войдите в аккаунт Grid-and-Go
-   <img width="1294" height="1680" alt="2" src="https://github.com/user-attachments/assets/42c6cdab-0992-44a7-9087-10661b0778e7" />
+   <img width="1294" height="1680" alt="Страница авторизации" src="https://github.com/user-attachments/assets/42c6cdab-0992-44a7-9087-10661b0778e7" />
 4. После авторизации автоматически загрузится список датапаков
 5. Выберите нужную **серию** во вкладках
-   <img width="2560" height="1590" alt="3" src="https://github.com/user-attachments/assets/547ab027-d598-43db-b505-fd94605b5bad" />
+   <img width="2560" height="1590" alt="Список серий" src="https://github.com/user-attachments/assets/547ab027-d598-43db-b505-fd94605b5bad" />
 6. Используйте клавишу **Week** для фильтрации по неделе
-    <img width="272" height="776" alt="4" src="https://github.com/user-attachments/assets/07cfeedb-e08d-463e-a269-3c7d8c662445" />
+   
+    <img width="272" height="776" alt="Week тулбар для фильтрации" src="https://github.com/user-attachments/assets/07cfeedb-e08d-463e-a269-3c7d8c662445" />
 7. Нажмите **Load setups** на интересующем датапаке
-    <img width="2560" height="470" alt="5" src="https://github.com/user-attachments/assets/2d1e2359-82d2-41e3-8719-126c55426ae7" />
+    <img width="2560" height="470" alt="Клавиша для показа сетапов" src="https://github.com/user-attachments/assets/2d1e2359-82d2-41e3-8719-126c55426ae7" />
 8. Нажмите **↓** рядом с нужным сетапом
-    <img width="2560" height="754" alt="6" src="https://github.com/user-attachments/assets/22ee3824-6288-4d53-b010-6d030d2dea76" />
+    <img width="2560" height="754" alt="Клавиши для скачиания" src="https://github.com/user-attachments/assets/22ee3824-6288-4d53-b010-6d030d2dea76" />
 9. Сетап скачается и установится в папку iRacing
-    <img width="2560" height="748" alt="7" src="https://github.com/user-attachments/assets/d46ff331-6204-41dd-93c5-2461cd6bb4b5" />
-    <img width="1600" height="494" alt="8" src="https://github.com/user-attachments/assets/12ee3a8f-8972-49e9-a24d-70a60673c4ca" />
+    <img width="2560" height="748" alt="Статус установки" src="https://github.com/user-attachments/assets/d46ff331-6204-41dd-93c5-2461cd6bb4b5" />
+    <img width="1600" height="494" alt="Сетапы в папке соответствующей машины" src="https://github.com/user-attachments/assets/12ee3a8f-8972-49e9-a24d-70a60673c4ca" />
 
 
 
