@@ -17,7 +17,7 @@ struct Setup
     QString  provider;
     QString  series;
     int      week    = 0;
-    float    laptime = 0.0f;  // seconds
+    float    laptime = 0.0f;
     bool     wet     = false;
 
     Car      car;

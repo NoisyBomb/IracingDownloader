@@ -26,8 +26,6 @@ void SetupDownloader::download(const Setup& setup)
     }
 
     m_current = setup;
-
-    // Временная папка: AppData/Local/Temp/IracingDownloader/
     const QString tempDir = QStandardPaths::writableLocation(
                                 QStandardPaths::TempLocation) + "/IracingDownloader";
     QDir().mkpath(tempDir);
@@ -44,10 +42,8 @@ void SetupDownloader::download(const Setup& setup)
 
     QNetworkRequest request;
     request.setUrl(setup.downloadUrl);
-    // S3 не требует авторизации — ссылка уже подписана
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
                          QNetworkRequest::NoLessSafeRedirectPolicy);
-
     m_reply = m_nam->get(request);
 
     connect(m_reply, &QNetworkReply::readyRead,
@@ -77,30 +73,21 @@ void SetupDownloader::onFinished()
     if (!m_reply) {
         return;
     }
-
     const QNetworkReply::NetworkError error = m_reply->error();
-
     if (error != QNetworkReply::NoError) {
-        // Проверяем — не истёкла ли S3 ссылка (HTTP 403)
-        const int httpStatus = m_reply->attribute(
-                                          QNetworkRequest::HttpStatusCodeAttribute).toInt();
-
+        const int httpStatus = m_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         QString reason = m_reply->errorString();
         if (httpStatus == 403) {
             reason = "Ссылка для скачивания истекла (10 мин). Обновите список сетапов.";
         }
-
         qWarning() << "[SetupDownloader] Ошибка:" << reason;
         emit downloadFailed(m_current, reason);
         cleanup();
         return;
     }
-
-    // Дозаписываем остаток если что-то осталось в буфере
     if (m_file && m_reply->bytesAvailable() > 0) {
         m_file->write(m_reply->readAll());
     }
-
     if (!m_file) {
         emit downloadFailed(m_current, "Временный файл был закрыт во время загрузки");
         cleanup();
@@ -110,9 +97,7 @@ void SetupDownloader::onFinished()
     m_file->close();
     const QString savedPath = m_tempPath;
     const Setup   savedSetup = m_current;
-
     qInfo() << "[SetupDownloader] Скачано:" << savedPath;
-
     cleanup();
     emit downloadFinished(savedSetup, savedPath);
 }

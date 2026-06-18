@@ -25,7 +25,7 @@ struct Track
         if (config.isEmpty()) {
             return displayName;
         }
-        return displayName + " \u2013 " + config;  // "–" em dash
+        return displayName + " \u2013 " + config;
     }
 
     bool isValid() const { return !id.isEmpty() && !displayName.isEmpty(); }

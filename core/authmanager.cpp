@@ -75,7 +75,6 @@ void AuthManager::onPageLoaded(bool ok)
     if (!url.contains("amazoncognito.com/login"))
         return;
 
-    // JS: заполняем поля и сабмитим форму
     const QString js = QString(R"(
         (function() {
             var emailField    = document.getElementById('signInFormUsername');
@@ -98,7 +97,6 @@ void AuthManager::onPageLoaded(bool ok)
         })()
     )").arg(QString(HARDCODED_USERNAME), QString(HARDCODED_PASSWORD));
 
-    // Небольшая задержка чтобы страница полностью отрисовалась
     QTimer::singleShot(800, this, [this, js]() {
         m_webView->page()->runJavaScript(js, [](const QVariant &result) {
             qInfo() << "[AuthManager] Autofill result:" << result.toString();
@@ -109,14 +107,10 @@ void AuthManager::onPageLoaded(bool ok)
 void AuthManager::onUrlChanged(const QUrl& url)
 {
     const QString urlStr = url.toString();
-
     if (!urlStr.startsWith(REDIRECT_URI))
         return;
-
-    // Игнорируем повторные срабатывания
     if (m_tokenExchanged)
         return;
-
     const QUrlQuery query(url);
     const QString code = query.queryItemValue("code");
 
@@ -127,7 +121,7 @@ void AuthManager::onUrlChanged(const QUrl& url)
         return;
     }
 
-    m_tokenExchanged = true;  // <- блокируем повторный вызов
+    m_tokenExchanged = true;
     qInfo() << "[AuthManager] Got code, exchanging for token…";
     m_webView->hide();
     exchangeCodeForToken(code, m_codeVerifier);

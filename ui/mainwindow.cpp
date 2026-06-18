@@ -13,9 +13,6 @@
 #include <QSet>
 #include <QDebug>
 
-// ══════════════════════════════════════════════════════════════════════════════
-// Helpers
-// ══════════════════════════════════════════════════════════════════════════════
 
 static QPixmap loadPic(const QString &subfolder, const QString &name)
 {
@@ -37,10 +34,6 @@ static QString sanitizeCarName(const QString &s)
     r.remove(re);
     return r;
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// DatapackRow
-// ══════════════════════════════════════════════════════════════════════════════
 
 QString DatapackRow::formatLaptime(float seconds)
 {

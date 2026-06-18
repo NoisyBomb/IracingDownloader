@@ -25,10 +25,10 @@ struct IracingWeek
         if (daysSince < 0)
             return { 1, 2026, 1, 13, false };
 
-        const int weekIndex      = static_cast<int>(daysSince / 7); // 0-based
-        const int weeksPerSeason = 13; // 12 race + 1 off
+        const int weekIndex      = static_cast<int>(daysSince / 7);
+        const int weeksPerSeason = 13;
         const int seasonIndex    = weekIndex / weeksPerSeason;
-        const int week           = weekIndex % weeksPerSeason + 1;  // 1-based
+        const int week           = weekIndex % weeksPerSeason + 1;
 
         const int year   = 2026 + seasonIndex / 4;
         const int season = seasonIndex % 4 + 1;

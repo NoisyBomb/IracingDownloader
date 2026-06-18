@@ -33,7 +33,6 @@ void GridAndGoProvider::fetchDatapackList(int year, int season)
     QNetworkReply* reply = m_nam->get(makeRequest(url, /*withAuth=*/false));
     connect(reply, &QNetworkReply::finished,
             this,  [this, reply]() { onListReplyFinished(reply); });
-
     qInfo() << "[GnGProvider] Запрашиваем список датапаков:" << url.toString();
 }
 
@@ -47,10 +46,8 @@ void GridAndGoProvider::onListReplyFinished(QNetworkReply* reply)
         emit fetchFailed(reason);
         return;
     }
-
     const QByteArray data = reply->readAll();
     const QList<Setup> setups = parseDatapackList(data);
-
     qInfo() << "[GnGProvider] Получено датапаков:" << setups.size();
     emit datapackListReady(setups);
 }
@@ -80,10 +77,8 @@ QList<Setup> GridAndGoProvider::parseDatapackList(const QByteArray& json) const
             "Bathurst12", "Daytona24", "FIXED", "OPENWHEEL-FIXED",
             "RingMeister", "Roar", "THE-PCC"
         };
-        if (id.isEmpty() || carId.isEmpty() || trackName.isEmpty())
-            continue;
-        if (excludedSeries.contains(series))
-            continue;
+        if (id.isEmpty() || carId.isEmpty() || trackName.isEmpty()) continue;
+        if (excludedSeries.contains(series)) continue;
 
         const QString folderName = CarRegistry::instance().folderName(carId, carName);
         const Car   car(carId, carName, folderName);
@@ -114,7 +109,6 @@ void GridAndGoProvider::fetchDatapackDetails(const QString& datapackId)
         emit fetchFailed("Нет access token — сначала войдите в аккаунт");
         return;
     }
-
     const QUrl url(QString("%1/datapacks/%2").arg(BASE_URL, datapackId));
     QNetworkReply* reply = m_nam->get(makeRequest(url, /*withAuth=*/true));
     connect(reply, &QNetworkReply::finished,
@@ -136,7 +130,6 @@ void GridAndGoProvider::onDetailsReplyFinished(QNetworkReply* reply)
 
     const QByteArray data = reply->readAll();
     const auto [datapackId, setups] = parseDatapackDetails(data);
-
     qInfo() << "[GnGProvider] Файлов сетапов в датапаке:" << setups.size();
     emit datapackDetailsReady(datapackId, setups);
 }
@@ -199,11 +192,8 @@ QNetworkRequest GridAndGoProvider::makeRequest(const QUrl& url, bool withAuth) c
     request.setUrl(url);
     request.setRawHeader("Accept", "*/*");
     request.setRawHeader("Origin", "https://app.grid-and-go.com");
-
     if (withAuth && !m_token.isEmpty()) {
-        request.setRawHeader("Authorization",
-                             QByteArray("Bearer ") + m_token.toUtf8());
+        request.setRawHeader("Authorization",QByteArray("Bearer ") + m_token.toUtf8());
     }
-
     return request;
 }
